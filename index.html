@@ -20,8 +20,7 @@ button { background:#00c853; color:#fff; border:none; }
 .modal {
   display:none;
   position:fixed;
-  top:0; left:0;
-  width:100%; height:100%;
+  inset:0;
   background:rgba(0,0,0,0.8);
   padding:20px;
 }
@@ -40,7 +39,13 @@ button { background:#00c853; color:#fff; border:none; }
   cursor:pointer;
 }
 
-.hidden { display:none; }
+.smallBtn {
+  background:#444;
+}
+
+#selectedSupplier {
+  margin:10px 0;
+}
 </style>
 </head>
 
@@ -49,13 +54,20 @@ button { background:#00c853; color:#fff; border:none; }
 <h2>📤 העלאת חשבונית</h2>
 
 <!-- ספק -->
-<button onclick="openSuppliers()">בחר ספק</button>
-<div id="selectedSupplier">לא נבחר ספק</div>
+<button onclick="openModal()">בחר ספק</button>
+<div id="selectedSupplier">❗ לא נבחר ספק</div>
 
-<!-- מודל ספקים -->
+<button class="smallBtn" onclick="showAdd()">➕ הוסף ספק חדש</button>
+
+<div id="addBox" style="display:none;">
+  <input id="newSupplier" placeholder="שם ספק חדש">
+  <button onclick="addSupplier()">שמור ספק</button>
+</div>
+
+<!-- מודל -->
 <div id="modal" class="modal">
   <div class="modal-content">
-    <h3>בחר ספק</h3>
+    <h3>ספקים</h3>
     <input id="search" placeholder="חיפוש ספק">
     <div id="list"></div>
     <button onclick="closeModal()">סגור</button>
@@ -63,7 +75,7 @@ button { background:#00c853; color:#fff; border:none; }
 </div>
 
 <!-- נתונים -->
-<input id="digits" placeholder="4 ספרות אחרונות">
+<input id="digits" placeholder="4 ספרות חשבונית">
 <input type="date" id="date">
 <input type="file" id="file" accept="image/*">
 
@@ -80,18 +92,24 @@ document.getElementById("date").valueAsDate = new Date();
 /* ---------------- ספקים ---------------- */
 
 async function loadSuppliers(){
-  let res = await fetch(API+"/suppliers");
-  suppliers = await res.json();
+  try{
+    let res = await fetch(API+"/suppliers");
+    suppliers = await res.json();
+  }catch(e){
+    suppliers = [];
+  }
 }
 loadSuppliers();
 
-function openSuppliers(){
-  document.getElementById("modal").style.display = "block";
+/* ---------------- מודל ---------------- */
+
+function openModal(){
+  document.getElementById("modal").style.display="block";
   renderList();
 }
 
 function closeModal(){
-  document.getElementById("modal").style.display = "none";
+  document.getElementById("modal").style.display="none";
 }
 
 function renderList(filter=""){
@@ -103,12 +121,12 @@ function renderList(filter=""){
     .sort((a,b)=>a.localeCompare(b,'he'))
     .forEach(s=>{
       let div = document.createElement("div");
-      div.className = "item";
-      div.innerText = s;
+      div.className="item";
+      div.innerText=s;
 
-      div.onclick = ()=>{
-        selected = s;
-        document.getElementById("selectedSupplier").innerText = "✔ " + s;
+      div.onclick=()=>{
+        selected=s;
+        document.getElementById("selectedSupplier").innerText="✔ " + s;
         closeModal();
       };
 
@@ -116,9 +134,36 @@ function renderList(filter=""){
     });
 }
 
-document.getElementById("search").addEventListener("input", function(){
+document.getElementById("search").addEventListener("input",function(){
   renderList(this.value);
 });
+
+/* ---------------- הוספת ספק ---------------- */
+
+function showAdd(){
+  document.getElementById("addBox").style.display =
+    document.getElementById("addBox").style.display==="none" ? "block" : "none";
+}
+
+async function addSupplier(){
+  let name = document.getElementById("newSupplier").value;
+  if(!name) return;
+
+  try{
+    await fetch(API+"/supplier",{
+      method:"POST",
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({name})
+    });
+
+    document.getElementById("newSupplier").value="";
+    alert("✔ ספק נוסף");
+    loadSuppliers();
+
+  }catch(e){
+    alert("❌ שגיאה בהוספת ספק");
+  }
+}
 
 /* ---------------- העלאה ---------------- */
 
@@ -130,31 +175,41 @@ async function upload(){
   }
 
   let file = document.getElementById("file").files[0];
-
   if(!file){
     alert("בחר קובץ");
     return;
   }
 
+  let digits = document.getElementById("digits").value;
+
+  // שם קובץ חכם
+  let fileName = selected + "_" + digits + ".jpg";
+
   let form = new FormData();
   form.append("supplier", selected);
-  form.append("digits", document.getElementById("digits").value);
+  form.append("digits", digits);
   form.append("date", document.getElementById("date").value);
-  form.append("file", file);
+  form.append("file", file, fileName);
 
-  let res = await fetch(API+"/upload",{
-    method:"POST",
-    body: form
-  });
+  try{
+    let res = await fetch(API+"/upload",{
+      method:"POST",
+      body: form
+    });
 
-  let data = await res.json();
+    let data = await res.json();
 
-  if(!res.ok){
-    alert("⚠️ " + data.message);
-    return;
+    if(!res.ok){
+      alert("⚠️ " + (data.message || "כפילות קיימת"));
+      return;
+    }
+
+    alert("✔ הועלה בהצלחה");
+
+  }catch(e){
+    alert("❌ שגיאה בשרת");
+    console.log(e);
   }
-
-  alert("✔ הועלה בהצלחה");
 }
 </script>
 
