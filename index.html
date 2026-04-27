@@ -9,7 +9,6 @@
 body { font-family: Arial; background:#111; color:#fff; padding:15px; }
 input, select, button { width:100%; padding:15px; margin:8px 0; font-size:18px; }
 button { background:#00c853; color:#fff; border:none; }
-video { width:100%; border-radius:10px; margin-top:10px; }
 </style>
 </head>
 
@@ -25,13 +24,8 @@ video { width:100%; border-radius:10px; margin-top:10px; }
 <input id="digits" placeholder="4 ספרות אחרונות">
 <input type="date" id="date">
 
-<video id="video" autoplay playsinline></video>
-
-<button onclick="camBack()">📷 מצלמה אחורית</button>
-<button onclick="camFront()">🤳 מצלמה קדמית</button>
-<button onclick="takePhoto()">📸 צלם</button>
-
-<canvas id="canvas" style="display:none;"></canvas>
+<!-- חזרה לבחירת קובץ רגילה -->
+<input type="file" id="file" accept="image/*">
 
 <button onclick="upload()">שלח</button>
 
@@ -41,19 +35,15 @@ const API = "https://invoice-backend-omy5.onrender.com";
 document.getElementById("date").valueAsDate = new Date();
 
 async function loadSuppliers(){
-  try{
-    let res = await fetch(API+"/suppliers");
-    let data = await res.json();
+  let res = await fetch(API+"/suppliers");
+  let data = await res.json();
 
-    let s = document.getElementById("supplier");
-    s.innerHTML = "";
+  let s = document.getElementById("supplier");
+  s.innerHTML = "";
 
-    data.forEach(x=>{
-      s.innerHTML += `<option>${x}</option>`;
-    });
-  }catch(e){
-    console.log("שגיאה בטעינת ספקים",e);
-  }
+  data.forEach(x=>{
+    s.innerHTML += `<option>${x}</option>`;
+  });
 }
 loadSuppliers();
 
@@ -70,62 +60,12 @@ async function addSupplier(){
   loadSuppliers();
 }
 
-/* ---------------- CAMERA ---------------- */
-
-let stream;
-let facing = "environment";
-let photoBlob;
-
-async function startCamera(){
-  try{
-    if(stream){
-      stream.getTracks().forEach(t=>t.stop());
-    }
-
-    stream = await navigator.mediaDevices.getUserMedia({
-      video:{ facingMode: facing }
-    });
-
-    document.getElementById("video").srcObject = stream;
-
-  }catch(e){
-    alert("אין גישה למצלמה");
-    console.log(e);
-  }
-}
-
-function camBack(){
-  facing = "environment";
-  startCamera();
-}
-
-function camFront(){
-  facing = "user";
-  startCamera();
-}
-
-function takePhoto(){
-  let video = document.getElementById("video");
-  let canvas = document.getElementById("canvas");
-
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-
-  let ctx = canvas.getContext("2d");
-  ctx.drawImage(video,0,0);
-
-  canvas.toBlob(blob=>{
-    photoBlob = blob;
-    alert("📸 תמונה צולמה");
-  },"image/jpeg");
-}
-
-/* ---------------- UPLOAD ---------------- */
-
 async function upload(){
 
-  if(!photoBlob){
-    alert("צלם תמונה קודם");
+  let file = document.getElementById("file").files[0];
+
+  if(!file){
+    alert("בחר קובץ קודם");
     return;
   }
 
@@ -133,7 +73,7 @@ async function upload(){
   form.append("supplier", document.getElementById("supplier").value);
   form.append("digits", document.getElementById("digits").value);
   form.append("date", document.getElementById("date").value);
-  form.append("file", photoBlob);
+  form.append("file", file);
 
   let res = await fetch(API+"/upload",{
     method:"POST",
@@ -143,10 +83,6 @@ async function upload(){
   let data = await res.json();
   alert(data.message);
 }
-
-/* start */
-startCamera();
-
 </script>
 
 </body>
