@@ -7,8 +7,21 @@
 
 <style>
 body { font-family: Arial; background:#111; color:#fff; padding:15px; }
-input, select, button { width:100%; padding:15px; margin:8px 0; font-size:18px; }
+
+input, button { width:100%; padding:15px; margin:8px 0; font-size:18px; }
+
 button { background:#00c853; color:#fff; border:none; }
+
+.box {
+  background:#222;
+  padding:10px;
+  margin-top:5px;
+  cursor:pointer;
+}
+
+.hidden { display:none; }
+
+#suggestions { margin-top:5px; }
 </style>
 </head>
 
@@ -16,15 +29,21 @@ button { background:#00c853; color:#fff; border:none; }
 
 <h2>📤 העלאת חשבונית</h2>
 
-<select id="supplier"></select>
+<!-- חיפוש ספק -->
+<input id="supplierSearch" placeholder="חפש ספק / הקלד שם">
+<div id="suggestions"></div>
 
-<input id="newSupplier" placeholder="הוסף ספק חדש">
-<button onclick="addSupplier()">➕ הוסף ספק</button>
+<!-- כפתור הוספת ספק -->
+<button onclick="toggleAddSupplier()">➕ הוסף ספק</button>
 
+<div id="addBox" class="hidden">
+  <input id="newSupplier" placeholder="שם ספק חדש">
+  <button onclick="addSupplier()">שמור ספק</button>
+</div>
+
+<!-- נתונים -->
 <input id="digits" placeholder="4 ספרות אחרונות">
 <input type="date" id="date">
-
-<!-- חזרה לבחירת קובץ רגילה -->
 <input type="file" id="file" accept="image/*">
 
 <button onclick="upload()">שלח</button>
@@ -32,23 +51,53 @@ button { background:#00c853; color:#fff; border:none; }
 <script>
 const API = "https://invoice-backend-omy5.onrender.com";
 
+let suppliersList = [];
+
 document.getElementById("date").valueAsDate = new Date();
+
+/* ---------------- ספקים ---------------- */
 
 async function loadSuppliers(){
   let res = await fetch(API+"/suppliers");
-  let data = await res.json();
-
-  let s = document.getElementById("supplier");
-  s.innerHTML = "";
-
-  data.forEach(x=>{
-    s.innerHTML += `<option>${x}</option>`;
-  });
+  suppliersList = await res.json();
 }
 loadSuppliers();
 
+document.getElementById("supplierSearch").addEventListener("input", function(){
+  let val = this.value.toLowerCase();
+  let box = document.getElementById("suggestions");
+
+  box.innerHTML = "";
+
+  let filtered = suppliersList.filter(s => s.toLowerCase().includes(val));
+
+  filtered.forEach(s=>{
+    let div = document.createElement("div");
+    div.className = "box";
+    div.innerText = s;
+
+    div.onclick = ()=>{
+      document.getElementById("supplierSearch").value = s;
+      box.innerHTML = "";
+    };
+
+    box.appendChild(div);
+  });
+});
+
+/* ---------------- הוספת ספק ---------------- */
+
+function toggleAddSupplier(){
+  document.getElementById("addBox").classList.toggle("hidden");
+}
+
 async function addSupplier(){
   let name = document.getElementById("newSupplier").value;
+
+  if(!name){
+    alert("כתוב שם ספק");
+    return;
+  }
 
   await fetch(API+"/supplier",{
     method:"POST",
@@ -57,32 +106,53 @@ async function addSupplier(){
   });
 
   document.getElementById("newSupplier").value = "";
-  loadSuppliers();
+  document.getElementById("addBox").classList.add("hidden");
+
+  await loadSuppliers();
+
+  alert("✔ ספק נוסף");
 }
+
+/* ---------------- העלאה ---------------- */
 
 async function upload(){
 
   let file = document.getElementById("file").files[0];
 
   if(!file){
-    alert("בחר קובץ קודם");
+    alert("בחר קובץ");
+    return;
+  }
+
+  let supplier = document.getElementById("supplierSearch").value;
+
+  if(!supplier){
+    alert("בחר ספק");
     return;
   }
 
   let form = new FormData();
-  form.append("supplier", document.getElementById("supplier").value);
+  form.append("supplier", supplier);
   form.append("digits", document.getElementById("digits").value);
   form.append("date", document.getElementById("date").value);
   form.append("file", file);
 
-  let res = await fetch(API+"/upload",{
-    method:"POST",
-    body: form
-  });
+  try{
+    let res = await fetch(API+"/upload",{
+      method:"POST",
+      body: form
+    });
 
-  let data = await res.json();
-  alert(data.message);
+    let data = await res.json();
+
+    alert("✔ הועלה בהצלחה");
+
+  }catch(e){
+    alert("❌ שגיאה בהעלאה");
+    console.log(e);
+  }
 }
+
 </script>
 
 </body>
