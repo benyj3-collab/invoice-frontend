@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>חשבוניות</title>
+<title>מערכת חשבוניות</title>
 
 <style>
 body { font-family: Arial; background:#111; color:#fff; padding:15px; }
 input, select, button { width:100%; padding:15px; margin:8px 0; font-size:18px; }
 button { background:#00c853; color:#fff; border:none; }
-video { width:100%; border-radius:10px; }
+video { width:100%; border-radius:10px; margin-top:10px; }
 </style>
 </head>
 
@@ -18,6 +18,9 @@ video { width:100%; border-radius:10px; }
 <h2>📤 העלאת חשבונית</h2>
 
 <select id="supplier"></select>
+
+<input id="newSupplier" placeholder="הוסף ספק חדש">
+<button onclick="addSupplier()">➕ הוסף ספק</button>
 
 <input id="digits" placeholder="4 ספרות אחרונות">
 <input type="date" id="date">
@@ -38,44 +41,57 @@ const API = "https://invoice-backend-omy5.onrender.com";
 document.getElementById("date").valueAsDate = new Date();
 
 async function loadSuppliers(){
-  let res = await fetch(API+"/suppliers");
-  let data = await res.json();
+  try{
+    let res = await fetch(API+"/suppliers");
+    let data = await res.json();
 
-  let s = document.getElementById("supplier");
-  s.innerHTML = "";
+    let s = document.getElementById("supplier");
+    s.innerHTML = "";
 
-  data.forEach(x=>{
-    s.innerHTML += `<option>${x}</option>`;
-  });
+    data.forEach(x=>{
+      s.innerHTML += `<option>${x}</option>`;
+    });
+  }catch(e){
+    console.log("שגיאה בטעינת ספקים",e);
+  }
 }
 loadSuppliers();
 
-async function uploadSupplier(name){
+async function addSupplier(){
+  let name = document.getElementById("newSupplier").value;
+
   await fetch(API+"/supplier",{
     method:"POST",
     headers:{'Content-Type':'application/json'},
     body: JSON.stringify({name})
   });
+
+  document.getElementById("newSupplier").value = "";
   loadSuppliers();
 }
 
+/* ---------------- CAMERA ---------------- */
+
 let stream;
 let facing = "environment";
+let photoBlob;
 
 async function startCamera(){
-  if(stream){
-    stream.getTracks().forEach(t=>t.stop());
-  }
-
   try{
-    stream = await navigator.mediaDevices.getUserMedia({
-      video:{ facingMode:{ exact:facing } }
-    });
-  }catch(e){
-    stream = await navigator.mediaDevices.getUserMedia({video:true});
-  }
+    if(stream){
+      stream.getTracks().forEach(t=>t.stop());
+    }
 
-  document.getElementById("video").srcObject = stream;
+    stream = await navigator.mediaDevices.getUserMedia({
+      video:{ facingMode: facing }
+    });
+
+    document.getElementById("video").srcObject = stream;
+
+  }catch(e){
+    alert("אין גישה למצלמה");
+    console.log(e);
+  }
 }
 
 function camBack(){
@@ -87,8 +103,6 @@ function camFront(){
   facing = "user";
   startCamera();
 }
-
-let photoBlob;
 
 function takePhoto(){
   let video = document.getElementById("video");
@@ -106,9 +120,12 @@ function takePhoto(){
   },"image/jpeg");
 }
 
+/* ---------------- UPLOAD ---------------- */
+
 async function upload(){
+
   if(!photoBlob){
-    alert("צלם קודם");
+    alert("צלם תמונה קודם");
     return;
   }
 
@@ -127,7 +144,9 @@ async function upload(){
   alert(data.message);
 }
 
+/* start */
 startCamera();
+
 </script>
 
 </body>
