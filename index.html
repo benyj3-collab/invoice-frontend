@@ -8,7 +8,12 @@
 <style>
 body { font-family: Arial; background:#111; color:#fff; padding:15px; }
 
-input, button { width:100%; padding:15px; margin:8px 0; font-size:18px; }
+input, button, select {
+  width:100%;
+  padding:15px;
+  margin:8px 0;
+  font-size:18px;
+}
 
 button { background:#00c853; color:#fff; border:none; }
 
@@ -21,7 +26,11 @@ button { background:#00c853; color:#fff; border:none; }
 
 .hidden { display:none; }
 
-#suggestions { margin-top:5px; }
+#dropdown {
+  max-height:200px;
+  overflow-y:auto;
+  background:#222;
+}
 </style>
 </head>
 
@@ -29,12 +38,14 @@ button { background:#00c853; color:#fff; border:none; }
 
 <h2>📤 העלאת חשבונית</h2>
 
-<!-- חיפוש ספק -->
-<input id="supplierSearch" placeholder="חפש ספק / הקלד שם">
-<div id="suggestions"></div>
+<!-- חיפוש -->
+<input id="supplierSearch" placeholder="חפש ספק או בחר מהרשימה">
 
-<!-- כפתור הוספת ספק -->
-<button onclick="toggleAddSupplier()">➕ הוסף ספק</button>
+<!-- רשימה נגללת -->
+<div id="dropdown"></div>
+
+<!-- הוספת ספק -->
+<button onclick="toggleAdd()">➕ הוסף ספק</button>
 
 <div id="addBox" class="hidden">
   <input id="newSupplier" placeholder="שם ספק חדש">
@@ -51,25 +62,64 @@ button { background:#00c853; color:#fff; border:none; }
 <script>
 const API = "https://invoice-backend-omy5.onrender.com";
 
-let suppliersList = [];
+let suppliers = [];
+let lastUsed = null;
 
 document.getElementById("date").valueAsDate = new Date();
 
-/* ---------------- ספקים ---------------- */
+/* ---------------- טעינה ---------------- */
 
 async function loadSuppliers(){
   let res = await fetch(API+"/suppliers");
-  suppliersList = await res.json();
+  suppliers = await res.json();
+
+  renderList();
 }
+
 loadSuppliers();
 
-document.getElementById("supplierSearch").addEventListener("input", function(){
-  let val = this.value.toLowerCase();
-  let box = document.getElementById("suggestions");
+/* ---------------- מיון + תצוגה ---------------- */
+
+function renderList(){
+  let box = document.getElementById("dropdown");
 
   box.innerHTML = "";
 
-  let filtered = suppliersList.filter(s => s.toLowerCase().includes(val));
+  let list = [...suppliers];
+
+  // האחרון בשימוש עולה למעלה
+  if(lastUsed){
+    list = list.filter(x=>x!==lastUsed);
+    list.unshift(lastUsed);
+  }
+
+  // מיון א-ב
+  list.sort((a,b)=>a.localeCompare(b,'he'));
+
+  list.forEach(s=>{
+    let div = document.createElement("div");
+    div.className = "box";
+    div.innerText = s;
+
+    div.onclick = ()=>{
+      document.getElementById("supplierSearch").value = s;
+      lastUsed = s;
+      renderList();
+    };
+
+    box.appendChild(div);
+  });
+}
+
+/* ---------------- חיפוש ---------------- */
+
+document.getElementById("supplierSearch").addEventListener("input", function(){
+  let val = this.value.toLowerCase();
+
+  let box = document.getElementById("dropdown");
+  box.innerHTML = "";
+
+  let filtered = suppliers.filter(s => s.toLowerCase().includes(val));
 
   filtered.forEach(s=>{
     let div = document.createElement("div");
@@ -78,7 +128,8 @@ document.getElementById("supplierSearch").addEventListener("input", function(){
 
     div.onclick = ()=>{
       document.getElementById("supplierSearch").value = s;
-      box.innerHTML = "";
+      lastUsed = s;
+      renderList();
     };
 
     box.appendChild(div);
@@ -87,17 +138,14 @@ document.getElementById("supplierSearch").addEventListener("input", function(){
 
 /* ---------------- הוספת ספק ---------------- */
 
-function toggleAddSupplier(){
+function toggleAdd(){
   document.getElementById("addBox").classList.toggle("hidden");
 }
 
 async function addSupplier(){
   let name = document.getElementById("newSupplier").value;
 
-  if(!name){
-    alert("כתוב שם ספק");
-    return;
-  }
+  if(!name) return;
 
   await fetch(API+"/supplier",{
     method:"POST",
@@ -109,8 +157,6 @@ async function addSupplier(){
   document.getElementById("addBox").classList.add("hidden");
 
   await loadSuppliers();
-
-  alert("✔ ספק נוסף");
 }
 
 /* ---------------- העלאה ---------------- */
@@ -118,16 +164,10 @@ async function addSupplier(){
 async function upload(){
 
   let file = document.getElementById("file").files[0];
-
-  if(!file){
-    alert("בחר קובץ");
-    return;
-  }
-
   let supplier = document.getElementById("supplierSearch").value;
 
-  if(!supplier){
-    alert("בחר ספק");
+  if(!file || !supplier){
+    alert("חסר נתונים");
     return;
   }
 
@@ -137,22 +177,15 @@ async function upload(){
   form.append("date", document.getElementById("date").value);
   form.append("file", file);
 
-  try{
-    let res = await fetch(API+"/upload",{
-      method:"POST",
-      body: form
-    });
+  let res = await fetch(API+"/upload",{
+    method:"POST",
+    body: form
+  });
 
-    let data = await res.json();
+  let data = await res.json();
 
-    alert("✔ הועלה בהצלחה");
-
-  }catch(e){
-    alert("❌ שגיאה בהעלאה");
-    console.log(e);
-  }
+  alert("✔ הועלה בהצלחה");
 }
-
 </script>
 
 </body>
