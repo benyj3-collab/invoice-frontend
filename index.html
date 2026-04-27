@@ -8,7 +8,7 @@
 <style>
 body { font-family: Arial; background:#111; color:#fff; padding:15px; }
 
-input, button, select {
+input, button {
   width:100%;
   padding:15px;
   margin:8px 0;
@@ -29,7 +29,6 @@ button { background:#00c853; color:#fff; border:none; }
 #dropdown {
   max-height:200px;
   overflow-y:auto;
-  background:#222;
 }
 </style>
 </head>
@@ -38,13 +37,11 @@ button { background:#00c853; color:#fff; border:none; }
 
 <h2>📤 העלאת חשבונית</h2>
 
-<!-- חיפוש -->
-<input id="supplierSearch" placeholder="חפש ספק או בחר מהרשימה">
+<!-- חיפוש ספק -->
+<input id="supplierSearch" placeholder="חפש ספק או בחר">
 
-<!-- רשימה נגללת -->
 <div id="dropdown"></div>
 
-<!-- הוספת ספק -->
 <button onclick="toggleAdd()">➕ הוסף ספק</button>
 
 <div id="addBox" class="hidden">
@@ -52,7 +49,6 @@ button { background:#00c853; color:#fff; border:none; }
   <button onclick="addSupplier()">שמור ספק</button>
 </div>
 
-<!-- נתונים -->
 <input id="digits" placeholder="4 ספרות אחרונות">
 <input type="date" id="date">
 <input type="file" id="file" accept="image/*">
@@ -72,28 +68,23 @@ document.getElementById("date").valueAsDate = new Date();
 async function loadSuppliers(){
   let res = await fetch(API+"/suppliers");
   suppliers = await res.json();
-
   renderList();
 }
-
 loadSuppliers();
 
-/* ---------------- מיון + תצוגה ---------------- */
+/* ---------------- תצוגה ---------------- */
 
 function renderList(){
   let box = document.getElementById("dropdown");
-
   box.innerHTML = "";
 
   let list = [...suppliers];
 
-  // האחרון בשימוש עולה למעלה
   if(lastUsed){
     list = list.filter(x=>x!==lastUsed);
     list.unshift(lastUsed);
   }
 
-  // מיון א-ב
   list.sort((a,b)=>a.localeCompare(b,'he'));
 
   list.forEach(s=>{
@@ -119,24 +110,24 @@ document.getElementById("supplierSearch").addEventListener("input", function(){
   let box = document.getElementById("dropdown");
   box.innerHTML = "";
 
-  let filtered = suppliers.filter(s => s.toLowerCase().includes(val));
+  suppliers
+    .filter(s => s.toLowerCase().includes(val))
+    .forEach(s=>{
+      let div = document.createElement("div");
+      div.className = "box";
+      div.innerText = s;
 
-  filtered.forEach(s=>{
-    let div = document.createElement("div");
-    div.className = "box";
-    div.innerText = s;
+      div.onclick = ()=>{
+        document.getElementById("supplierSearch").value = s;
+        lastUsed = s;
+        renderList();
+      };
 
-    div.onclick = ()=>{
-      document.getElementById("supplierSearch").value = s;
-      lastUsed = s;
-      renderList();
-    };
-
-    box.appendChild(div);
-  });
+      box.appendChild(div);
+    });
 });
 
-/* ---------------- הוספת ספק ---------------- */
+/* ---------------- ספקים ---------------- */
 
 function toggleAdd(){
   document.getElementById("addBox").classList.toggle("hidden");
@@ -183,6 +174,11 @@ async function upload(){
   });
 
   let data = await res.json();
+
+  if(!res.ok){
+    alert("⚠️ " + data.message);
+    return;
+  }
 
   alert("✔ הועלה בהצלחה");
 }
