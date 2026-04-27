@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>חשבוניות</title>
+<title>מערכת חשבוניות</title>
 
 <style>
 body { font-family: Arial; background:#111; color:#fff; padding:15px; }
@@ -21,7 +21,7 @@ button { background:#00c853; color:#fff; border:none; }
   display:none;
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,0.8);
+  background:rgba(0,0,0,0.85);
   padding:20px;
 }
 
@@ -39,12 +39,13 @@ button { background:#00c853; color:#fff; border:none; }
   cursor:pointer;
 }
 
-.smallBtn {
-  background:#444;
-}
-
 #selectedSupplier {
   margin:10px 0;
+  color:#0f0;
+}
+
+.smallBtn {
+  background:#444;
 }
 </style>
 </head>
@@ -54,10 +55,10 @@ button { background:#00c853; color:#fff; border:none; }
 <h2>📤 העלאת חשבונית</h2>
 
 <!-- ספק -->
-<button onclick="openModal()">בחר ספק</button>
+<button onclick="openSuppliers()">בחר ספק</button>
 <div id="selectedSupplier">❗ לא נבחר ספק</div>
 
-<button class="smallBtn" onclick="showAdd()">➕ הוסף ספק חדש</button>
+<button class="smallBtn" onclick="toggleAdd()">➕ הוסף ספק</button>
 
 <div id="addBox" style="display:none;">
   <input id="newSupplier" placeholder="שם ספק חדש">
@@ -67,7 +68,7 @@ button { background:#00c853; color:#fff; border:none; }
 <!-- מודל -->
 <div id="modal" class="modal">
   <div class="modal-content">
-    <h3>ספקים</h3>
+    <h3>בחר ספק</h3>
     <input id="search" placeholder="חיפוש ספק">
     <div id="list"></div>
     <button onclick="closeModal()">סגור</button>
@@ -103,7 +104,7 @@ loadSuppliers();
 
 /* ---------------- מודל ---------------- */
 
-function openModal(){
+function openSuppliers(){
   document.getElementById("modal").style.display="block";
   renderList();
 }
@@ -140,14 +141,18 @@ document.getElementById("search").addEventListener("input",function(){
 
 /* ---------------- הוספת ספק ---------------- */
 
-function showAdd(){
-  document.getElementById("addBox").style.display =
-    document.getElementById("addBox").style.display==="none" ? "block" : "none";
+function toggleAdd(){
+  let box = document.getElementById("addBox");
+  box.style.display = box.style.display === "none" ? "block" : "none";
 }
 
 async function addSupplier(){
   let name = document.getElementById("newSupplier").value;
-  if(!name) return;
+
+  if(!name){
+    alert("כתוב שם ספק");
+    return;
+  }
 
   try{
     await fetch(API+"/supplier",{
@@ -157,8 +162,10 @@ async function addSupplier(){
     });
 
     document.getElementById("newSupplier").value="";
+    document.getElementById("addBox").style.display="none";
+
+    await loadSuppliers();
     alert("✔ ספק נוסף");
-    loadSuppliers();
 
   }catch(e){
     alert("❌ שגיאה בהוספת ספק");
@@ -169,29 +176,33 @@ async function addSupplier(){
 
 async function upload(){
 
-  if(!selected){
-    alert("בחר ספק");
-    return;
-  }
-
-  let file = document.getElementById("file").files[0];
-  if(!file){
-    alert("בחר קובץ");
-    return;
-  }
-
-  let digits = document.getElementById("digits").value;
-
-  // שם קובץ חכם
-  let fileName = selected + "_" + digits + ".jpg";
-
-  let form = new FormData();
-  form.append("supplier", selected);
-  form.append("digits", digits);
-  form.append("date", document.getElementById("date").value);
-  form.append("file", file, fileName);
-
   try{
+
+    if(!selected){
+      alert("❗ לא נבחר ספק");
+      return;
+    }
+
+    let file = document.getElementById("file").files[0];
+    let digits = document.getElementById("digits").value;
+    let date = document.getElementById("date").value;
+
+    if(!file){
+      alert("❗ בחר קובץ");
+      return;
+    }
+
+    if(!digits){
+      alert("❗ חסר מספר חשבונית");
+      return;
+    }
+
+    let form = new FormData();
+    form.append("supplier", selected.trim());
+    form.append("digits", digits.trim());
+    form.append("date", date);
+    form.append("file", file);
+
     let res = await fetch(API+"/upload",{
       method:"POST",
       body: form
@@ -200,15 +211,15 @@ async function upload(){
     let data = await res.json();
 
     if(!res.ok){
-      alert("⚠️ " + (data.message || "כפילות קיימת"));
+      alert("⚠️ " + (data.message || "חשבונית כבר קיימת"));
       return;
     }
 
     alert("✔ הועלה בהצלחה");
 
   }catch(e){
-    alert("❌ שגיאה בשרת");
     console.log(e);
+    alert("❌ שגיאה כללית בהעלאה");
   }
 }
 </script>
