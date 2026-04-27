@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>העלאת חשבונית</title>
+<title>העלאת חשבוניות</title>
 
 <style>
 body { font-family: Arial; background:#111; color:#fff; padding:15px; }
@@ -17,6 +17,9 @@ button { background:#00c853; color:#fff; border:none; }
 <h2>📤 העלאת חשבונית</h2>
 
 <select id="supplier"></select>
+
+<input id="newSupplier" placeholder="הוסף ספק חדש">
+<button onclick="addSupplier()">➕ הוסף ספק</button>
 
 <input id="digits" placeholder="4 ספרות אחרונות">
 <input type="date" id="date">
@@ -41,6 +44,19 @@ async function loadSuppliers(){
   });
 }
 loadSuppliers();
+
+async function addSupplier(){
+  let name = document.getElementById("newSupplier").value;
+
+  await fetch(API+"/supplier",{
+    method:"POST",
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({name})
+  });
+
+  document.getElementById("newSupplier").value = "";
+  loadSuppliers();
+}
 
 async function upload(){
   let form = new FormData();
