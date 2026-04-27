@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>העלאת חשבוניות</title>
+<title>חשבוניות</title>
 
 <style>
 body { font-family: Arial; background:#111; color:#fff; padding:15px; }
 input, select, button { width:100%; padding:15px; margin:8px 0; font-size:18px; }
 button { background:#00c853; color:#fff; border:none; }
-video { width:100%; border-radius:10px; margin-top:10px; }
+video { width:100%; border-radius:10px; }
 </style>
 </head>
 
@@ -19,16 +19,14 @@ video { width:100%; border-radius:10px; margin-top:10px; }
 
 <select id="supplier"></select>
 
-<input id="newSupplier" placeholder="הוסף ספק חדש">
-<button onclick="addSupplier()">➕ הוסף ספק</button>
-
 <input id="digits" placeholder="4 ספרות אחרונות">
 <input type="date" id="date">
 
 <video id="video" autoplay playsinline></video>
 
-<button onclick="switchCamera()">🔄 החלף מצלמה</button>
-<button onclick="takePhoto()">📷 צלם</button>
+<button onclick="camBack()">📷 מצלמה אחורית</button>
+<button onclick="camFront()">🤳 מצלמה קדמית</button>
+<button onclick="takePhoto()">📸 צלם</button>
 
 <canvas id="canvas" style="display:none;"></canvas>
 
@@ -52,42 +50,45 @@ async function loadSuppliers(){
 }
 loadSuppliers();
 
-async function addSupplier(){
-  let name = document.getElementById("newSupplier").value;
-
+async function uploadSupplier(name){
   await fetch(API+"/supplier",{
     method:"POST",
     headers:{'Content-Type':'application/json'},
     body: JSON.stringify({name})
   });
-
-  document.getElementById("newSupplier").value = "";
   loadSuppliers();
 }
 
-let currentStream;
-let useFront = false;
+let stream;
+let facing = "environment";
 
 async function startCamera(){
-  if(currentStream){
-    currentStream.getTracks().forEach(track => track.stop());
+  if(stream){
+    stream.getTracks().forEach(t=>t.stop());
   }
 
-  currentStream = await navigator.mediaDevices.getUserMedia({
-    video: {
-      facingMode: useFront ? "user" : "environment"
-    }
-  });
+  try{
+    stream = await navigator.mediaDevices.getUserMedia({
+      video:{ facingMode:{ exact:facing } }
+    });
+  }catch(e){
+    stream = await navigator.mediaDevices.getUserMedia({video:true});
+  }
 
-  document.getElementById("video").srcObject = currentStream;
+  document.getElementById("video").srcObject = stream;
 }
 
-function switchCamera(){
-  useFront = !useFront;
+function camBack(){
+  facing = "environment";
   startCamera();
 }
 
-let capturedBlob;
+function camFront(){
+  facing = "user";
+  startCamera();
+}
+
+let photoBlob;
 
 function takePhoto(){
   let video = document.getElementById("video");
@@ -97,17 +98,17 @@ function takePhoto(){
   canvas.height = video.videoHeight;
 
   let ctx = canvas.getContext("2d");
-  ctx.drawImage(video, 0, 0);
+  ctx.drawImage(video,0,0);
 
-  canvas.toBlob(blob => {
-    capturedBlob = blob;
-    alert("📷 תמונה צולמה");
-  }, "image/jpeg");
+  canvas.toBlob(blob=>{
+    photoBlob = blob;
+    alert("📸 תמונה צולמה");
+  },"image/jpeg");
 }
 
 async function upload(){
-  if(!capturedBlob){
-    alert("צלם תמונה קודם");
+  if(!photoBlob){
+    alert("צלם קודם");
     return;
   }
 
@@ -115,7 +116,7 @@ async function upload(){
   form.append("supplier", document.getElementById("supplier").value);
   form.append("digits", document.getElementById("digits").value);
   form.append("date", document.getElementById("date").value);
-  form.append("file", capturedBlob);
+  form.append("file", photoBlob);
 
   let res = await fetch(API+"/upload",{
     method:"POST",
