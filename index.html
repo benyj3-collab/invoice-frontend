@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>מערכת חשבוניות</title>
+<title>חשבוניות</title>
 
 <style>
 body { font-family: Arial; background:#111; color:#fff; padding:15px; }
@@ -17,19 +17,30 @@ input, button {
 
 button { background:#00c853; color:#fff; border:none; }
 
-.box {
+.modal {
+  display:none;
+  position:fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background:rgba(0,0,0,0.8);
+  padding:20px;
+}
+
+.modal-content {
   background:#222;
+  padding:15px;
+  max-height:80%;
+  overflow-y:auto;
+}
+
+.item {
   padding:10px;
-  margin-top:5px;
+  margin:5px 0;
+  background:#333;
   cursor:pointer;
 }
 
 .hidden { display:none; }
-
-#dropdown {
-  max-height:200px;
-  overflow-y:auto;
-}
 </style>
 </head>
 
@@ -37,18 +48,21 @@ button { background:#00c853; color:#fff; border:none; }
 
 <h2>📤 העלאת חשבונית</h2>
 
-<!-- חיפוש ספק -->
-<input id="supplierSearch" placeholder="חפש ספק או בחר">
+<!-- ספק -->
+<button onclick="openSuppliers()">בחר ספק</button>
+<div id="selectedSupplier">לא נבחר ספק</div>
 
-<div id="dropdown"></div>
-
-<button onclick="toggleAdd()">➕ הוסף ספק</button>
-
-<div id="addBox" class="hidden">
-  <input id="newSupplier" placeholder="שם ספק חדש">
-  <button onclick="addSupplier()">שמור ספק</button>
+<!-- מודל ספקים -->
+<div id="modal" class="modal">
+  <div class="modal-content">
+    <h3>בחר ספק</h3>
+    <input id="search" placeholder="חיפוש ספק">
+    <div id="list"></div>
+    <button onclick="closeModal()">סגור</button>
+  </div>
 </div>
 
+<!-- נתונים -->
 <input id="digits" placeholder="4 ספרות אחרונות">
 <input type="date" id="date">
 <input type="file" id="file" accept="image/*">
@@ -59,111 +73,71 @@ button { background:#00c853; color:#fff; border:none; }
 const API = "https://invoice-backend-omy5.onrender.com";
 
 let suppliers = [];
-let lastUsed = null;
+let selected = "";
 
 document.getElementById("date").valueAsDate = new Date();
 
-/* ---------------- טעינה ---------------- */
+/* ---------------- ספקים ---------------- */
 
 async function loadSuppliers(){
   let res = await fetch(API+"/suppliers");
   suppliers = await res.json();
-  renderList();
 }
 loadSuppliers();
 
-/* ---------------- תצוגה ---------------- */
-
-function renderList(){
-  let box = document.getElementById("dropdown");
-  box.innerHTML = "";
-
-  let list = [...suppliers];
-
-  if(lastUsed){
-    list = list.filter(x=>x!==lastUsed);
-    list.unshift(lastUsed);
-  }
-
-  list.sort((a,b)=>a.localeCompare(b,'he'));
-
-  list.forEach(s=>{
-    let div = document.createElement("div");
-    div.className = "box";
-    div.innerText = s;
-
-    div.onclick = ()=>{
-      document.getElementById("supplierSearch").value = s;
-      lastUsed = s;
-      renderList();
-    };
-
-    box.appendChild(div);
-  });
+function openSuppliers(){
+  document.getElementById("modal").style.display = "block";
+  renderList();
 }
 
-/* ---------------- חיפוש ---------------- */
+function closeModal(){
+  document.getElementById("modal").style.display = "none";
+}
 
-document.getElementById("supplierSearch").addEventListener("input", function(){
-  let val = this.value.toLowerCase();
-
-  let box = document.getElementById("dropdown");
+function renderList(filter=""){
+  let box = document.getElementById("list");
   box.innerHTML = "";
 
   suppliers
-    .filter(s => s.toLowerCase().includes(val))
+    .filter(s=>s.toLowerCase().includes(filter.toLowerCase()))
+    .sort((a,b)=>a.localeCompare(b,'he'))
     .forEach(s=>{
       let div = document.createElement("div");
-      div.className = "box";
+      div.className = "item";
       div.innerText = s;
 
       div.onclick = ()=>{
-        document.getElementById("supplierSearch").value = s;
-        lastUsed = s;
-        renderList();
+        selected = s;
+        document.getElementById("selectedSupplier").innerText = "✔ " + s;
+        closeModal();
       };
 
       box.appendChild(div);
     });
+}
+
+document.getElementById("search").addEventListener("input", function(){
+  renderList(this.value);
 });
-
-/* ---------------- ספקים ---------------- */
-
-function toggleAdd(){
-  document.getElementById("addBox").classList.toggle("hidden");
-}
-
-async function addSupplier(){
-  let name = document.getElementById("newSupplier").value;
-
-  if(!name) return;
-
-  await fetch(API+"/supplier",{
-    method:"POST",
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({name})
-  });
-
-  document.getElementById("newSupplier").value = "";
-  document.getElementById("addBox").classList.add("hidden");
-
-  await loadSuppliers();
-}
 
 /* ---------------- העלאה ---------------- */
 
 async function upload(){
 
-  let file = document.getElementById("file").files[0];
-  let supplier = document.getElementById("supplierSearch").value;
+  if(!selected){
+    alert("בחר ספק");
+    return;
+  }
 
-  if(!file || !supplier){
-    alert("חסר נתונים");
+  let file = document.getElementById("file").files[0];
+
+  if(!file){
+    alert("בחר קובץ");
     return;
   }
 
   let form = new FormData();
-  form.append("supplier", supplier);
+  form.append("supplier", selected);
   form.append("digits", document.getElementById("digits").value);
   form.append("date", document.getElementById("date").value);
   form.append("file", file);
