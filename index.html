@@ -9,6 +9,8 @@
 body { font-family: Arial; background:#111; color:#fff; padding:15px; }
 input, select, button { width:100%; padding:15px; margin:8px 0; font-size:18px; }
 button { background:#00c853; color:#fff; border:none; }
+video { width:100%; margin-top:10px; }
+canvas { display:none; }
 </style>
 </head>
 
@@ -23,12 +25,19 @@ button { background:#00c853; color:#fff; border:none; }
 
 <input id="digits" placeholder="4 ספרות אחרונות">
 <input type="date" id="date">
-<input type="file" id="file">
+
+<button onclick="startCamera()">📷 פתח מצלמה</button>
+<video id="video" autoplay></video>
+<button onclick="capture()">📸 צלם</button>
+
+<canvas id="canvas"></canvas>
 
 <button onclick="upload()">שלח</button>
 
 <script>
 const API = "https://invoice-backend-omy5.onrender.com";
+
+let imageBlob = null;
 
 document.getElementById("date").valueAsDate = new Date();
 
@@ -58,12 +67,36 @@ async function addSupplier(){
   loadSuppliers();
 }
 
+async function startCamera(){
+  let stream = await navigator.mediaDevices.getUserMedia({video:true});
+  document.getElementById("video").srcObject = stream;
+}
+
+function capture(){
+  let video = document.getElementById("video");
+  let canvas = document.getElementById("canvas");
+
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+
+  let ctx = canvas.getContext("2d");
+  ctx.drawImage(video, 0, 0);
+
+  canvas.toBlob(blob=>{
+    imageBlob = blob;
+    alert("📸 התמונה נשמרה");
+  }, "image/jpeg");
+}
+
 async function upload(){
   let form = new FormData();
   form.append("supplier", document.getElementById("supplier").value);
   form.append("digits", document.getElementById("digits").value);
   form.append("date", document.getElementById("date").value);
-  form.append("file", document.getElementById("file").files[0]);
+
+  if(imageBlob){
+    form.append("file", imageBlob, "photo.jpg");
+  }
 
   let res = await fetch(API+"/upload",{
     method:"POST",
