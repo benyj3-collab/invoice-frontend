@@ -1,228 +1,67 @@
-<!DOCTYPE html>
-<html lang="he" dir="rtl">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>מערכת חשבוניות</title>
+const express = require("express");
+const cors = require("cors");
+const multer = require("multer");
 
-<style>
-body { font-family: Arial; background:#111; color:#fff; padding:15px; }
+const app = express();
+app.use(cors());
+app.use(express.json());
 
-input, button {
-  width:100%;
-  padding:15px;
-  margin:8px 0;
-  font-size:18px;
-}
-
-button { background:#00c853; color:#fff; border:none; }
-
-.modal {
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,0.85);
-  padding:20px;
-}
-
-.modal-content {
-  background:#222;
-  padding:15px;
-  max-height:80%;
-  overflow-y:auto;
-}
-
-.item {
-  padding:10px;
-  margin:5px 0;
-  background:#333;
-  cursor:pointer;
-}
-
-#selectedSupplier {
-  margin:10px 0;
-  color:#0f0;
-}
-
-.smallBtn {
-  background:#444;
-}
-</style>
-</head>
-
-<body>
-
-<h2>📤 העלאת חשבונית</h2>
-
-<!-- ספק -->
-<button onclick="openSuppliers()">בחר ספק</button>
-<div id="selectedSupplier">❗ לא נבחר ספק</div>
-
-<button class="smallBtn" onclick="toggleAdd()">➕ הוסף ספק</button>
-
-<div id="addBox" style="display:none;">
-  <input id="newSupplier" placeholder="שם ספק חדש">
-  <button onclick="addSupplier()">שמור ספק</button>
-</div>
-
-<!-- מודל -->
-<div id="modal" class="modal">
-  <div class="modal-content">
-    <h3>בחר ספק</h3>
-    <input id="search" placeholder="חיפוש ספק">
-    <div id="list"></div>
-    <button onclick="closeModal()">סגור</button>
-  </div>
-</div>
-
-<!-- נתונים -->
-<input id="digits" placeholder="4 ספרות חשבונית">
-<input type="date" id="date">
-<input type="file" id="file" accept="image/*">
-
-<button onclick="upload()">שלח</button>
-
-<script>
-const API = "https://invoice-backend-omy5.onrender.com";
+const upload = multer({ storage: multer.memoryStorage() });
 
 let suppliers = [];
-let selected = "";
-
-document.getElementById("date").valueAsDate = new Date();
+let invoices = [];
 
 /* ---------------- ספקים ---------------- */
 
-async function loadSuppliers(){
-  try{
-    let res = await fetch(API+"/suppliers");
-    suppliers = await res.json();
-  }catch(e){
-    suppliers = [];
-  }
-}
-loadSuppliers();
-
-/* ---------------- מודל ---------------- */
-
-function openSuppliers(){
-  document.getElementById("modal").style.display="block";
-  renderList();
-}
-
-function closeModal(){
-  document.getElementById("modal").style.display="none";
-}
-
-function renderList(filter=""){
-  let box = document.getElementById("list");
-  box.innerHTML = "";
-
-  suppliers
-    .filter(s=>s.toLowerCase().includes(filter.toLowerCase()))
-    .sort((a,b)=>a.localeCompare(b,'he'))
-    .forEach(s=>{
-      let div = document.createElement("div");
-      div.className="item";
-      div.innerText=s;
-
-      div.onclick=()=>{
-        selected=s;
-        document.getElementById("selectedSupplier").innerText="✔ " + s;
-        closeModal();
-      };
-
-      box.appendChild(div);
-    });
-}
-
-document.getElementById("search").addEventListener("input",function(){
-  renderList(this.value);
+app.get("/suppliers", (req,res)=>{
+  res.json(suppliers);
 });
 
-/* ---------------- הוספת ספק ---------------- */
-
-function toggleAdd(){
-  let box = document.getElementById("addBox");
-  box.style.display = box.style.display === "none" ? "block" : "none";
-}
-
-async function addSupplier(){
-  let name = document.getElementById("newSupplier").value;
+app.post("/supplier", (req,res)=>{
+  const { name } = req.body;
 
   if(!name){
-    alert("כתוב שם ספק");
-    return;
+    return res.status(400).json({message:"missing name"});
   }
 
-  try{
-    await fetch(API+"/supplier",{
-      method:"POST",
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({name})
-    });
-
-    document.getElementById("newSupplier").value="";
-    document.getElementById("addBox").style.display="none";
-
-    await loadSuppliers();
-    alert("✔ ספק נוסף");
-
-  }catch(e){
-    alert("❌ שגיאה בהוספת ספק");
+  if(!suppliers.includes(name)){
+    suppliers.push(name);
   }
-}
+
+  res.json({ok:true});
+});
 
 /* ---------------- העלאה ---------------- */
 
-async function upload(){
+app.post("/upload", upload.single("file"), (req,res)=>{
+  const { supplier, digits, date } = req.body;
 
-  try{
-
-    if(!selected){
-      alert("❗ לא נבחר ספק");
-      return;
-    }
-
-    let file = document.getElementById("file").files[0];
-    let digits = document.getElementById("digits").value;
-    let date = document.getElementById("date").value;
-
-    if(!file){
-      alert("❗ בחר קובץ");
-      return;
-    }
-
-    if(!digits){
-      alert("❗ חסר מספר חשבונית");
-      return;
-    }
-
-    let form = new FormData();
-    form.append("supplier", selected.trim());
-    form.append("digits", digits.trim());
-    form.append("date", date);
-    form.append("file", file);
-
-    let res = await fetch(API+"/upload",{
-      method:"POST",
-      body: form
-    });
-
-    let data = await res.json();
-
-    if(!res.ok){
-      alert("⚠️ " + (data.message || "חשבונית כבר קיימת"));
-      return;
-    }
-
-    alert("✔ הועלה בהצלחה");
-
-  }catch(e){
-    console.log(e);
-    alert("❌ שגיאה כללית בהעלאה");
+  if(!supplier || !digits){
+    return res.status(400).json({message:"missing data"});
   }
-}
-</script>
 
-</body>
-</html>
+  // 🔥 בדיקת כפילות אמיתית
+  const exists = invoices.find(i =>
+    i.supplier === supplier &&
+    i.digits === digits
+  );
+
+  if(exists){
+    return res.status(400).json({
+      message:"חשבונית כבר קיימת למספר הזה"
+    });
+  }
+
+  invoices.push({
+    supplier,
+    digits,
+    date,
+    time: new Date().toISOString()
+  });
+
+  res.json({ok:true});
+});
+
+app.listen(3000, ()=>{
+  console.log("server running");
+});
