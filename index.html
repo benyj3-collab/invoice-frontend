@@ -1,67 +1,91 @@
-const express = require("express");
-const cors = require("cors");
-const multer = require("multer");
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>מערכת חשבוניות</title>
 
-const app = express();
-app.use(cors());
-app.use(express.json());
+<style>
+body { font-family: Arial; background:#111; color:#fff; padding:20px; }
+input, select, button { width:100%; padding:12px; margin:8px 0; font-size:16px; }
+button { background:green; color:white; border:none; }
+</style>
+</head>
 
-const upload = multer({ storage: multer.memoryStorage() });
+<body>
 
-let suppliers = [];
-let invoices = [];
+<h2>📤 העלאת חשבונית</h2>
 
-/* ---------------- ספקים ---------------- */
+<input id="supplier" placeholder="שם ספק">
+<button onclick="addSupplier()">הוסף ספק</button>
 
-app.get("/suppliers", (req,res)=>{
-  res.json(suppliers);
-});
+<select id="supplierList"></select>
 
-app.post("/supplier", (req,res)=>{
-  const { name } = req.body;
+<input id="digits" placeholder="4 ספרות אחרונות">
+<input type="date" id="date">
+<input type="file" id="file">
 
-  if(!name){
-    return res.status(400).json({message:"missing name"});
-  }
+<button onclick="upload()">שלח</button>
 
-  if(!suppliers.includes(name)){
-    suppliers.push(name);
-  }
+<p id="msg"></p>
 
-  res.json({ok:true});
-});
+<script>
+const API = "https://invoice-backend-2akp.onrender.com";
 
-/* ---------------- העלאה ---------------- */
+/* ספקים */
+async function loadSuppliers(){
+  let res = await fetch(API+"/suppliers");
+  let data = await res.json();
 
-app.post("/upload", upload.single("file"), (req,res)=>{
-  const { supplier, digits, date } = req.body;
+  let s = document.getElementById("supplierList");
+  s.innerHTML = "";
 
-  if(!supplier || !digits){
-    return res.status(400).json({message:"missing data"});
-  }
+  data.forEach(x=>{
+    s.innerHTML += `<option>${x}</option>`;
+  });
+}
+loadSuppliers();
 
-  // 🔥 בדיקת כפילות אמיתית
-  const exists = invoices.find(i =>
-    i.supplier === supplier &&
-    i.digits === digits
-  );
+/* הוספת ספק */
+async function addSupplier(){
+  let name = document.getElementById("supplier").value;
 
-  if(exists){
-    return res.status(400).json({
-      message:"חשבונית כבר קיימת למספר הזה"
-    });
-  }
-
-  invoices.push({
-    supplier,
-    digits,
-    date,
-    time: new Date().toISOString()
+  await fetch(API+"/supplier",{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({ name })
   });
 
-  res.json({ok:true});
-});
+  loadSuppliers();
+}
 
-app.listen(3000, ()=>{
-  console.log("server running");
-});
+/* העלאה */
+async function upload(){
+  let msg = document.getElementById("msg");
+
+  let file = document.getElementById("file").files[0];
+  if(!file){
+    msg.innerText = "בחר קובץ";
+    return;
+  }
+
+  let form = new FormData();
+  form.append("supplier", document.getElementById("supplierList").value);
+  form.append("digits", document.getElementById("digits").value);
+  form.append("date", document.getElementById("date").value);
+  form.append("file", file);
+
+  msg.innerText = "מעלה...";
+
+  let res = await fetch(API+"/upload",{
+    method:"POST",
+    body: form
+  });
+
+  let data = await res.json();
+
+  msg.innerText = data.ok ? "הועלה בהצלחה" : data.message;
+}
+</script>
+
+</body>
+</html>
