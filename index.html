@@ -17,7 +17,7 @@ h2 { text-align:center; }
 
 <h2>📤 מערכת חשבוניות</h2>
 
-<!-- הוספת ספק -->
+<!-- ספק חדש -->
 <input id="supplier" placeholder="שם ספק חדש">
 <button onclick="addSupplier()">➕ הוסף ספק</button>
 
@@ -28,8 +28,8 @@ h2 { text-align:center; }
 <input id="digits" placeholder="4 ספרות אחרונות">
 <input type="date" id="date">
 
-<!-- מצלמה / קובץ -->
-<input type="file" id="file" accept="image/*" capture="environment">
+<!-- קובץ (מצלמה + גלריה יחד) -->
+<input type="file" id="file" accept="image/*">
 
 <!-- שליחה -->
 <button onclick="upload()">שלח חשבונית</button>
@@ -53,7 +53,7 @@ async function loadSuppliers(){
     });
 
   } catch(err){
-    console.log(err);
+    document.getElementById("msg").innerText = "שגיאה בטעינת ספקים";
   }
 }
 loadSuppliers();
@@ -78,7 +78,7 @@ async function addSupplier(){
   loadSuppliers();
 }
 
-/* העלאה מלאה */
+/* העלאה */
 async function upload(){
   let msg = document.getElementById("msg");
 
