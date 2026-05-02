@@ -2,69 +2,90 @@
 <html lang="he" dir="rtl">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>מערכת חשבוניות</title>
 
 <style>
 body { font-family: Arial; background:#111; color:#fff; padding:20px; }
 input, select, button { width:100%; padding:12px; margin:8px 0; font-size:16px; }
-button { background:green; color:white; border:none; }
+button { background:green; color:white; border:none; border-radius:6px; }
+h2 { text-align:center; }
 </style>
 </head>
 
 <body>
 
-<h2>📤 העלאת חשבונית</h2>
+<h2>📤 מערכת חשבוניות</h2>
 
-<input id="supplier" placeholder="שם ספק">
-<button onclick="addSupplier()">הוסף ספק</button>
+<!-- הוספת ספק -->
+<input id="supplier" placeholder="שם ספק חדש">
+<button onclick="addSupplier()">➕ הוסף ספק</button>
 
+<!-- רשימת ספקים -->
 <select id="supplierList"></select>
 
+<!-- פרטי חשבונית -->
 <input id="digits" placeholder="4 ספרות אחרונות">
 <input type="date" id="date">
-<input type="file" id="file">
 
-<button onclick="upload()">שלח</button>
+<!-- מצלמה / קובץ -->
+<input type="file" id="file" accept="image/*" capture="environment">
+
+<!-- שליחה -->
+<button onclick="upload()">שלח חשבונית</button>
 
 <p id="msg"></p>
 
 <script>
 const API = "https://invoice-backend-2akp.onrender.com";
 
-/* ספקים */
+/* טעינת ספקים */
 async function loadSuppliers(){
-  let res = await fetch(API+"/suppliers");
-  let data = await res.json();
+  try {
+    let res = await fetch(API + "/suppliers");
+    let data = await res.json();
 
-  let s = document.getElementById("supplierList");
-  s.innerHTML = "";
+    let s = document.getElementById("supplierList");
+    s.innerHTML = "";
 
-  data.forEach(x=>{
-    s.innerHTML += `<option>${x}</option>`;
-  });
+    data.forEach(x=>{
+      s.innerHTML += `<option value="${x}">${x}</option>`;
+    });
+
+  } catch(err){
+    console.log(err);
+  }
 }
 loadSuppliers();
 
 /* הוספת ספק */
 async function addSupplier(){
   let name = document.getElementById("supplier").value;
+  let msg = document.getElementById("msg");
 
-  await fetch(API+"/supplier",{
+  if(!name){
+    msg.innerText = "הכנס שם ספק";
+    return;
+  }
+
+  await fetch(API + "/supplier", {
     method:"POST",
     headers:{ "Content-Type":"application/json" },
     body: JSON.stringify({ name })
   });
 
+  document.getElementById("supplier").value = "";
   loadSuppliers();
 }
 
-/* העלאה */
+/* העלאה מלאה */
 async function upload(){
   let msg = document.getElementById("msg");
 
-  let file = document.getElementById("file").files[0];
-  if(!file){
-    msg.innerText = "בחר קובץ";
+  let fileInput = document.getElementById("file");
+
+  if(!fileInput.files || fileInput.files.length === 0){
+    msg.innerText = "בחר קובץ או צלם תמונה";
     return;
   }
 
@@ -72,18 +93,29 @@ async function upload(){
   form.append("supplier", document.getElementById("supplierList").value);
   form.append("digits", document.getElementById("digits").value);
   form.append("date", document.getElementById("date").value);
-  form.append("file", file);
+  form.append("file", fileInput.files[0]);
 
   msg.innerText = "מעלה...";
 
-  let res = await fetch(API+"/upload",{
-    method:"POST",
-    body: form
-  });
+  try {
+    let res = await fetch(API + "/upload", {
+      method:"POST",
+      body: form
+    });
 
-  let data = await res.json();
+    let data = await res.json();
 
-  msg.innerText = data.ok ? "הועלה בהצלחה" : data.message;
+    if(data.ok){
+      msg.innerText = "✔ הועלה בהצלחה";
+      document.getElementById("digits").value = "";
+      document.getElementById("file").value = "";
+    } else {
+      msg.innerText = data.message || "שגיאה";
+    }
+
+  } catch(err){
+    msg.innerText = "שגיאת חיבור לשרת";
+  }
 }
 </script>
 
