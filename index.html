@@ -10,7 +10,7 @@ body { font-family: Arial; background:#111; color:#fff; padding:20px; }
 input, select, button { width:100%; padding:12px; margin:8px 0; font-size:16px; }
 button { background:green; color:white; border:none; border-radius:6px; }
 h2 { text-align:center; }
-#msg { margin-top:10px; color:#00e676; }
+#msg { margin-top:10px; }
 </style>
 </head>
 
@@ -24,7 +24,7 @@ h2 { text-align:center; }
 
 <select id="supplierList"></select>
 
-<!-- חשבונית -->
+<!-- פרטי חשבונית -->
 <input id="digits" placeholder="4 ספרות אחרונות">
 <input type="date" id="date">
 
@@ -48,7 +48,10 @@ async function loadSuppliers(){
     s.innerHTML = "";
 
     data.forEach(x=>{
-      s.innerHTML += `<option value="${x}">${x}</option>`;
+      let opt = document.createElement("option");
+      opt.value = x;
+      opt.textContent = x;
+      s.appendChild(opt);
     });
 
   } catch(err){
@@ -77,7 +80,7 @@ async function addSupplier(){
   loadSuppliers();
 }
 
-/* העלאה מתוקנת (FIX מצלמה) */
+/* העלאה יציבה (תיקון מצלמה) */
 async function upload(){
   let msg = document.getElementById("msg");
   let fileInput = document.getElementById("file");
@@ -108,10 +111,10 @@ async function upload(){
     if(data.ok){
       msg.innerText = "✔ הועלה בהצלחה";
 
-      // 🔥 קריטי - פתרון הבאג של מצלמה במובייל
+      // 🔥 איפוס מלא יציב למובייל (פתרון אמיתי)
       fileInput.value = "";
+      fileInput.blur();
 
-      document.getElementById("digits").value = "";
     } else {
       msg.innerText = data.message || "שגיאה";
     }
