@@ -698,7 +698,7 @@ var VAT=1.18;
   if(!standalone&&(isIos||isAnd)){
     var h=document.getElementById('pwaHint');
     h.style.display='block';
-    h.innerHTML=isIos?'📲 שתף ← <strong>הוסף למסך הבית</strong> <span style="font-size:11px;opacity:.8;">(לחץ לסגירה)</span>':'📲 תפריט ⋮ ← <strong>הוסף למסך הבית</strong> <span style="font-size:11px;opacity:.8;">(לחץ לסגירה)</span>';
+    h.textContent=isIos?'📲 שתף ← הוסף למסך הבית (לחץ לסגירה)':'📲 תפריט ⋮ ← הוסף למסך הבית (לחץ לסגירה)';
   }
   generateIcon();
 })();
@@ -862,6 +862,7 @@ function deleteSupplier(){
   rndSups();
   toast("✅ ספק '"+s+"' הוסר","ok");
 }
+function showRenCat(){
   var s=document.getElementById("renOld").value;
   var el=document.getElementById("renCurCat");
   if(el&&s&&supCats[s]) el.textContent="קטגוריה נוכחית: "+supCats[s];
@@ -888,7 +889,9 @@ function buildMsupDrop(dropId,storeKey,lblId){
   // "כולם"
   var allItem=document.createElement("div");
   allItem.className="msup-item"+(arr.indexOf("all")!==-1||arr.length===0?" sel":"");
-  allItem.innerHTML='<div class="msup-ck">'+(arr.indexOf("all")!==-1||arr.length===0?"✓":"")+'</div><span>כל הספקים</span>';
+  var allCk=document.createElement("div");allCk.className="msup-ck";allCk.textContent=(arr.indexOf("all")!==-1||arr.length===0?"✓":"");
+  var allLbl=document.createElement("span");allLbl.textContent="כל הספקים";
+  allItem.appendChild(allCk);allItem.appendChild(allLbl);
   allItem.onclick=function(){
     window[storeKey]=[];
     buildMsupDrop(dropId,storeKey,lblId);
@@ -898,11 +901,12 @@ function buildMsupDrop(dropId,storeKey,lblId){
   sups.forEach(function(s){
     var item=document.createElement("div");
     item.className="msup-item"+(arr.indexOf(s)!==-1?" sel":"");
-    item.innerHTML='<div class="msup-ck">'+(arr.indexOf(s)!==-1?"✓":"")+'</div><span>'+esc(s)+'</span>';
+    var ck=document.createElement("div");ck.className="msup-ck";ck.textContent=(arr.indexOf(s)!==-1?"✓":"");
+    var lbl=document.createElement("span");lbl.textContent=s;
+    item.appendChild(ck);item.appendChild(lbl);
     item.onclick=function(e){
       e.stopPropagation();
       var a=window[storeKey]||[];
-      // הסר "all"
       var ai=a.indexOf("all");if(ai!==-1)a.splice(ai,1);
       var idx=a.indexOf(s);
       if(idx!==-1)a.splice(idx,1);else a.push(s);
