@@ -411,7 +411,8 @@ ol.steps li strong{color:var(--text);}
           <div class="popt"        id="po-cash"   onclick="setPay('cash')"   style="flex:0 0 calc(50% - 3px);">💵 מזומן</div>
           <div class="popt"        id="po-check"  onclick="setPay('check')"  style="flex:0 0 calc(50% - 3px);">📄 צ׳ק</div>
           <div class="popt"        id="po-both"   onclick="setPay('both')"   style="flex:0 0 calc(50% - 3px);">🔀 מפוצל</div>
-          <div class="popt"        id="po-bank"   onclick="setPay('bank')"   style="flex:1;">🏦 העברה בנקאית</div>
+          <div class="popt"        id="po-bank"   onclick="setPay('bank')"   style="flex:0 0 calc(50% - 3px);">🏦 העברה</div>
+          <div class="popt"        id="po-credit" onclick="setPay('credit')" style="flex:0 0 calc(50% - 3px);">💳 אשראי</div>
         </div>
         <div class="pf" id="pf-cash">
           <div class="fcol"><div class="flabel">סכום מזומן (₪)</div><input type="number" id="cAmt" placeholder="0.00" inputmode="decimal" /></div>
@@ -440,6 +441,36 @@ ol.steps li strong{color:var(--text);}
             <div class="fcol"><div class="flabel">סכום (₪)</div><input type="number" id="bankAmt" placeholder="0.00" inputmode="decimal" /></div>
           </div>
         </div>
+        <div class="pf" id="pf-credit">
+          <div class="frow">
+            <div class="fcol">
+              <div class="flabel">חברת אשראי</div>
+              <div class="sw">
+                <select id="creditCo">
+                  <option value="ויזה">💳 ויזה</option>
+                  <option value="מאסטרקארד">💳 מאסטרקארד</option>
+                  <option value="ישראכרט">💳 ישראכרט</option>
+                  <option value="אמריקן אקספרס">💳 אמריקן אקספרס</option>
+                  <option value="דיינרס">💳 דיינרס</option>
+                </select><span class="sa">▾</span>
+              </div>
+            </div>
+            <div class="fcol">
+              <div class="flabel">4 ספרות אחרונות</div>
+              <input type="text" id="creditLast4" placeholder="1234" maxlength="4" inputmode="numeric" />
+            </div>
+          </div>
+          <div class="fcol mt8">
+            <div class="flabel">סכום (₪)</div>
+            <input type="number" id="creditAmt" placeholder="0.00" inputmode="decimal" />
+          </div>
+        </div>
+      </div>
+
+      <!-- הערה -->
+      <div class="card" style="border-right:4px solid var(--teal);">
+        <div class="clabel">הערה (אופציונלי)</div>
+        <input type="text" id="noteInp" placeholder="הערה לחשבונית..." maxlength="200" />
       </div>
 
       <div class="card coral">
@@ -1346,13 +1377,13 @@ function fmtDate(d){
 /* ---- Payment ---- */
 function setPay(m){
   payMode=m;
-  ["unpaid","cash","check","both","bank"].forEach(function(k){
+  ["unpaid","cash","check","both","bank","credit"].forEach(function(k){
     var el=document.getElementById("po-"+k);
-    if(el) el.classList.toggle("active",k===m);
+    if(el)el.classList.toggle("active",k===m);
   });
-  ["cash","check","both","bank"].forEach(function(k){
+  ["cash","check","both","bank","credit"].forEach(function(k){
     var el=document.getElementById("pf-"+k);
-    if(el) el.classList.toggle("open",k===m);
+    if(el)el.classList.toggle("open",k===m);
   });
   updSum();
 }
@@ -1461,6 +1492,12 @@ function payLbl(){
   if(payMode==="bank"){
     return"🏦 העברה #"+(document.getElementById("bankRef").value||"")+" ₪"+(document.getElementById("bankAmt").value||"");
   }
+  if(payMode==="credit"){
+    var co=document.getElementById("creditCo").value||"אשראי";
+    var l4=document.getElementById("creditLast4").value||"";
+    var amt=document.getElementById("creditAmt").value||"";
+    return"💳 "+co+(l4?" *"+l4:"")+" ₪"+amt;
+  }
   return"";
 }
 function clrDup(){document.getElementById("dupW").classList.remove("show");}
@@ -1498,20 +1535,23 @@ function skipHektzaa(){
 function submitInvoice(s,d,t,amt,hektzaaNum){
   setLd(true);
   var invNum=getNextInvNum();
+  var note=document.getElementById("noteInp").value.trim();
   var pl={
     action:"uploadInvoice",supplier:s,digits:d,date:t,
     invoiceNum:invNum,category:supCats[s]||"",
-    hektzaaNum:hektzaaNum,
+    hektzaaNum:hektzaaNum,note:note,
     pages:pages.map(function(p){return p.b64;}),
     mimeTypes:pages.map(function(p){return p.mime;}),
     payment:payMode,paid:payMode!=="unpaid"&&payMode!=="",
     amtTotal:amt?String(amt):"",
     payAmount:payMode==="cash"?document.getElementById("cAmt").value:
               payMode==="check"?document.getElementById("ckAmt").value:
-              payMode==="bank"?document.getElementById("bankAmt").value:"",
+              payMode==="bank"?document.getElementById("bankAmt").value:
+              payMode==="credit"?document.getElementById("creditAmt").value:"",
     payAmount2:payMode==="both"?document.getElementById("ckAmt2").value:"",
     checkNum: payMode==="check"?document.getElementById("cNum").value:
-              payMode==="bank"?document.getElementById("bankRef").value:"",
+              payMode==="bank"?document.getElementById("bankRef").value:
+              payMode==="credit"?(document.getElementById("creditCo").value+" *"+document.getElementById("creditLast4").value):"",
     checkNum2:payMode==="both"?document.getElementById("cNum2").value:"",
     checkDate: payMode==="check"?document.getElementById("cDate").value:"",
     checkDate2:payMode==="both"?document.getElementById("cDate2").value:""
@@ -1539,7 +1579,7 @@ function reset(){
   document.getElementById("invNumBadge").style.display="none";
   setToday();pages=[];rndPages();setPay("unpaid");clrDup();
   document.getElementById("summBox").classList.remove("show");
-  ["cAmt","cNum","ckAmt","cDate","cAmt2","ckAmt2","cNum2","cDate2","bankRef","bankAmt"].forEach(function(id){
+  ["cAmt","cNum","ckAmt","cDate","cAmt2","ckAmt2","cNum2","cDate2","bankRef","bankAmt","creditLast4","creditAmt","noteInp"].forEach(function(id){
     var el=document.getElementById(id);if(el)el.value="";
   });
 }
@@ -1580,6 +1620,8 @@ function loadHist(){
       var bot='<div style="margin-top:6px;display:flex;align-items:center;flex-wrap:wrap;gap:5px;">';
       if(inv.amtTotal) bot+='<span class="iamt">₪'+fmtAmt(inv.amtTotal)+'</span>';
       if(inv.payment)  bot+='<span class="ipay">'+esc(inv.payment)+'</span>';
+      if(inv.hektzaaNum) bot+='<span class="ibadge" style="background:#fef3c7;color:#d97706;">🏛️ '+esc(inv.hektzaaNum)+'</span>';
+      if(inv.note) bot+='<div style="margin-top:6px;font-size:12px;color:var(--text2);background:var(--s2);border-radius:8px;padding:5px 10px;">💬 '+esc(inv.note)+'</div>';
       if(inv.category) bot+='<span class="icat">'+esc(inv.category)+'</span>';
       bot+='<span class="ipaid '+(isPaid?"yes":"no")+'">'+(isPaid?"✅ שולם":"❌ לא שולם")+'</span>';
       bot+='</div>';
