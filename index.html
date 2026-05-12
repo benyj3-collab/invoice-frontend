@@ -33,7 +33,30 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;height:260px;backgro
 
 /* TAB BAR */
 .tab-bar{position:fixed;bottom:0;left:0;right:0;background:var(--s1);display:flex;z-index:50;padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -4px 24px rgba(108,62,184,.13);border-radius:24px 24px 0 0;}
-.tab{flex:1;padding:10px 2px 8px;text-align:center;font-size:9px;font-weight:700;color:var(--text3);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;transition:color .2s;}
+.tab{flex:1;padding:10px 1px 8px;text-align:center;font-size:8px;font-weight:700;color:var(--text3);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;transition:color .2s;}
+.tab .ti{font-size:19px;transition:transform .2s;}
+.tab.active{color:var(--purple);}
+.tab.active .ti{transform:scale(1.15);}
+
+/* BULK PAYMENT PAGE */
+.inv-check-item{display:flex;align-items:flex-start;gap:10px;background:var(--s1);border:1.5px solid var(--border);border-radius:var(--rs);padding:12px;margin-bottom:8px;cursor:pointer;transition:all .15s;}
+.inv-check-item.selected{border-color:var(--purple);background:var(--purple3);}
+.inv-checkbox{width:22px;height:22px;border-radius:6px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;margin-top:2px;transition:all .15s;}
+.inv-check-item.selected .inv-checkbox{background:var(--purple);border-color:var(--purple);color:#fff;}
+.inv-check-info{flex:1;}
+.inv-check-sup{font-size:14px;font-weight:800;color:var(--text);}
+.inv-check-sub{font-size:11px;color:var(--text2);margin-top:2px;}
+.inv-check-amt{font-size:15px;font-weight:900;color:var(--purple);flex-shrink:0;}
+.pay-total-bar{background:linear-gradient(135deg,#6c3eb8,#8b5cf6);border-radius:var(--r);padding:14px 16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;}
+.pay-total-bar .pt-lbl{font-size:11px;color:rgba(255,255,255,.75);font-weight:700;}
+.pay-total-bar .pt-val{font-size:22px;font-weight:900;color:#fff;}
+.pay-total-bar .pt-cnt{font-size:12px;color:rgba(255,255,255,.85);}
+
+/* CREDIT CARD FIELDS */
+.cc-field{background:linear-gradient(135deg,#1e1040,#3d1f8a);border-radius:14px;padding:16px;margin-bottom:10px;}
+.cc-field .flabel{color:rgba(255,255,255,.75)!important;}
+.cc-field input{background:rgba(255,255,255,.15)!important;border:1px solid rgba(255,255,255,.3)!important;color:#fff!important;border-radius:9px!important;}
+.cc-field input::placeholder{color:rgba(255,255,255,.4)!important;}
 .tab .ti{font-size:20px;transition:transform .2s;}
 .tab.active{color:var(--purple);}
 .tab.active .ti{transform:scale(1.15);}
@@ -181,7 +204,26 @@ input.digs::placeholder{letter-spacing:2px;font-size:13px;font-weight:400;color:
 .rtab.active{background:var(--purple3);border-color:var(--purple);color:var(--purple);}
 .rpanel{display:none;}.rpanel.active{display:block;}
 
-/* SUPPLIER SEARCH DROPDOWN */
+/* BULK PAYMENT PAGE */
+.pay-total-bar{background:linear-gradient(135deg,#6c3eb8,#8b5cf6);padding:14px 18px;display:flex;justify-content:space-between;align-items:center;border-radius:var(--r);margin-bottom:10px;box-shadow:var(--shadow2);}
+.pt-lbl{font-size:10px;color:rgba(255,255,255,.7);font-weight:700;text-transform:uppercase;letter-spacing:.8px;}
+.pt-cnt{font-size:18px;font-weight:900;color:#fff;}
+.pt-val{font-size:24px;font-weight:900;color:#fff;}
+.pay-inv-item{display:flex;align-items:center;gap:12px;background:var(--s1);border:1.5px solid var(--border);border-radius:var(--r);padding:13px 14px;margin-bottom:8px;cursor:pointer;transition:all .15s;box-shadow:var(--shadow);}
+.pay-inv-item.selected{border-color:var(--purple);background:var(--purple3);}
+.pay-inv-item:active{transform:scale(.99);}
+.pi-check{font-size:22px;flex-shrink:0;width:28px;text-align:center;}
+.pi-info{flex:1;}
+.pi-sup{font-size:14px;font-weight:800;color:var(--text);margin-bottom:3px;}
+.pi-details{font-size:12px;color:var(--text2);}
+.pi-amt{font-weight:800;color:var(--purple);}
+
+/* CREDIT CARD */
+.cc-field{background:linear-gradient(135deg,#1e1040,#3b1f8c);border-radius:var(--rs);padding:14px;margin-top:4px;}
+.cc-field .flabel{color:rgba(255,255,255,.7);}
+.cc-field input{background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3);color:#fff;}
+.cc-field input::placeholder{color:rgba(255,255,255,.4);}
+.cc-field input:focus{border-color:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.2);}
 .sup-search-wrap{position:relative;margin-bottom:2px;}
 .sup-search-btn{width:100%;background:var(--s2);border:1.5px solid var(--border);border-radius:var(--rs);padding:12px 14px;font-size:15px;color:var(--text);cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:border-color .15s;}
 .sup-search-btn.active{border-color:var(--purple2);box-shadow:0 0 0 3px var(--purple3);}
@@ -293,6 +335,7 @@ ol.steps li strong{color:var(--text);}
   <div class="tab-bar">
     <div class="tab active" onclick="showTab('upload')"  id="tab-upload" ><span class="ti">📤</span>העלאה</div>
     <div class="tab"        onclick="showTab('history')" id="tab-history"><span class="ti">📋</span>היסטוריה</div>
+    <div class="tab"        onclick="showTab('pay')"     id="tab-pay"    ><span class="ti">💳</span>תשלום</div>
     <div class="tab"        onclick="showTab('reports')" id="tab-reports"><span class="ti">📊</span>דוחות</div>
     <div class="tab"        onclick="showTab('send')"    id="tab-send"   ><span class="ti">📨</span>שליחה</div>
     <div class="tab"        onclick="showTab('settings')" id="tab-settings"><span class="ti">⚙️</span>הגדרות</div>
@@ -471,6 +514,109 @@ ol.steps li strong{color:var(--text);}
       </div>
     </div>
     <div id="invList" class="ilist"><div class="iempty">📂<br>בחר סינון לטעינת חשבוניות</div></div>
+  </div>
+
+  <!-- ===== PAYMENT PAGE ===== -->
+  <div class="page" id="page-pay">
+    <div class="header"><div class="hrow"><div class="logo">💳</div><h1>תשלום לספק</h1></div></div>
+    <div class="body">
+
+      <!-- בחירת ספק -->
+      <div class="card purple">
+        <div class="clabel">בחר ספק</div>
+        <div class="sup-search-wrap" id="paySupSearchWrap">
+          <div class="sup-search-btn" id="paySupSearchBtn" onclick="togglePaySupSearch()">
+            <span id="paySupLabel">— בחר ספק —</span>
+            <span style="color:var(--text3);">🔍</span>
+          </div>
+          <div class="sup-search-drop" id="paySupSearchDrop">
+            <input type="text" id="paySupSearchInp" placeholder="חפש ספק..."
+              oninput="filterPaySup(this.value)"
+              style="border:none;border-bottom:1px solid var(--border);border-radius:0;background:#fff;padding:11px 14px;" />
+            <div id="paySupDropList" class="sup-drop-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- סה"כ שנבחר -->
+      <div class="pay-total-bar" id="payTotalBar" style="display:none;">
+        <div>
+          <div class="pt-lbl">חשבוניות שנבחרו</div>
+          <div class="pt-cnt" id="paySelCount">0 חשבוניות</div>
+        </div>
+        <div style="text-align:left;">
+          <div class="pt-lbl">סה"כ לתשלום</div>
+          <div class="pt-val" id="paySelTotal">₪0</div>
+        </div>
+      </div>
+
+      <!-- בחר/בטל הכל -->
+      <div id="paySelectAll" style="display:none;margin-bottom:8px;display:none;">
+        <button class="bout" style="margin-top:0;padding:9px;" onclick="toggleSelectAll()">
+          <span id="selAllLabel">✅ בחר הכל</span>
+        </button>
+      </div>
+
+      <!-- רשימת חשבוניות -->
+      <div id="payInvList"></div>
+
+      <!-- אופן תשלום -->
+      <div class="card gold" id="payMethodCard" style="display:none;">
+        <div class="clabel">אופן תשלום</div>
+        <div class="popts" style="flex-wrap:wrap;gap:6px;">
+          <div class="popt active" id="bpo-cash"   onclick="setBulkPay('cash')"   style="flex:0 0 calc(50% - 3px);">💵 מזומן</div>
+          <div class="popt"        id="bpo-check"  onclick="setBulkPay('check')"  style="flex:0 0 calc(50% - 3px);">📄 צ׳ק</div>
+          <div class="popt"        id="bpo-bank"   onclick="setBulkPay('bank')"   style="flex:0 0 calc(50% - 3px);">🏦 העברה</div>
+          <div class="popt"        id="bpo-credit" onclick="setBulkPay('credit')" style="flex:0 0 calc(50% - 3px);">💳 אשראי</div>
+        </div>
+
+        <!-- מזומן -->
+        <div class="pf open" id="bpf-cash">
+          <div class="fcol"><div class="flabel">סכום מזומן (₪)</div>
+          <input type="number" id="bCashAmt" placeholder="0.00" inputmode="decimal" /></div>
+        </div>
+
+        <!-- צ׳ק -->
+        <div class="pf" id="bpf-check">
+          <div class="frow">
+            <div class="fcol"><div class="flabel">מספר צ׳ק</div><input type="text" id="bCheckNum" placeholder="123456" inputmode="numeric" /></div>
+            <div class="fcol"><div class="flabel">סכום (₪)</div><input type="number" id="bCheckAmt" placeholder="0.00" inputmode="decimal" /></div>
+          </div>
+          <div class="fcol mt8"><div class="flabel">📅 תאריך צ׳ק</div><input type="date" id="bCheckDate" /></div>
+        </div>
+
+        <!-- העברה -->
+        <div class="pf" id="bpf-bank">
+          <div class="frow">
+            <div class="fcol"><div class="flabel">מספר אסמכתה</div><input type="text" id="bBankRef" placeholder="123456789" inputmode="numeric" /></div>
+            <div class="fcol"><div class="flabel">סכום (₪)</div><input type="number" id="bBankAmt" placeholder="0.00" inputmode="decimal" /></div>
+          </div>
+        </div>
+
+        <!-- אשראי -->
+        <div class="pf" id="bpf-credit">
+          <div class="cc-field">
+            <div class="frow" style="margin-top:0;">
+              <div class="fcol">
+                <div class="flabel">4 ספרות אחרונות</div>
+                <input type="text" id="bCreditLast4" placeholder="1234" maxlength="4" inputmode="numeric" />
+              </div>
+              <div class="fcol">
+                <div class="flabel">סכום (₪)</div>
+                <input type="number" id="bCreditAmt" placeholder="0.00" inputmode="decimal" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button class="bsub" onclick="confirmBulkPayment()" style="margin-top:4px;">
+          <span class="bt">💳 אשר תשלום לחשבוניות שנבחרו</span>
+          <div class="sp"></div>
+        </button>
+        <div class="sres" id="bulkPayRes"></div>
+      </div>
+
+    </div>
   </div>
 
   <!-- ===== REPORTS PAGE ===== -->
@@ -848,6 +994,7 @@ function showTab(n){
   document.getElementById("tab-"+n).classList.add("active");
   if(n==="history") loadHist();
   if(n==="reports") initReports();
+  if(n==="pay")     initPayTab();
 }
 
 function setSt(t,m){
@@ -1826,6 +1973,232 @@ function sendPDFReport(){
       if(btn){btn.textContent='📎 שלח PDF מצורף (לרו"ח)';btn.disabled=false;}
       res.className="sres show err";res.textContent="❌ שגיאת חיבור";
     });
+}
+
+/* ============================================================
+   תשלום מרובה לספק
+   ============================================================ */
+var paySelInvs = {};   // rowId → invoice object
+var bulkPayMode = "cash";
+var bulkSupplier = "";
+
+function showTab(n){
+  document.querySelectorAll(".page").forEach(function(p){p.classList.remove("active");});
+  document.querySelectorAll(".tab").forEach(function(t){t.classList.remove("active");});
+  document.getElementById("page-"+n).classList.add("active");
+  document.getElementById("tab-"+n).classList.add("active");
+  if(n==="history") loadHist();
+  if(n==="reports") initReports();
+  if(n==="pay")     initPayTab();
+}
+
+function initPayTab(){
+  paySelInvs={};bulkSupplier="";
+  document.getElementById("payInvList").innerHTML="";
+  document.getElementById("payMethodCard").style.display="none";
+  document.getElementById("payTotalBar").style.display="none";
+  document.getElementById("paySelectAll").style.display="none";
+  document.getElementById("paySupLabel").textContent="— בחר ספק —";
+  updatePayTotals();
+}
+
+/* חיפוש ספק בטאב תשלום */
+function togglePaySupSearch(){
+  var drop=document.getElementById("paySupSearchDrop");
+  var btn=document.getElementById("paySupSearchBtn");
+  var isOpen=drop.classList.contains("open");
+  document.querySelectorAll(".sup-search-drop.open").forEach(function(d){d.classList.remove("open");});
+  document.querySelectorAll(".sup-search-btn.active").forEach(function(b){b.classList.remove("active");});
+  if(!isOpen){
+    drop.classList.add("open");btn.classList.add("active");
+    buildPaySupList("");
+    setTimeout(function(){document.getElementById("paySupSearchInp").focus();},100);
+  }
+}
+function buildPaySupList(q){
+  var list=document.getElementById("paySupDropList");list.innerHTML="";
+  var filtered=q?sups.filter(function(s){return s.indexOf(q)!==-1;}):sups;
+  filtered.forEach(function(s){
+    var div=document.createElement("div");div.className="sup-drop-item";
+    var cat=supCats[s]||"";
+    div.innerHTML='<span>'+esc(s)+'</span>'+(cat?'<span class="sup-cat-badge">'+esc(cat)+'</span>':"");
+    div.onclick=function(){selectPaySup(s);};
+    list.appendChild(div);
+  });
+}
+function filterPaySup(q){buildPaySupList(q);}
+function selectPaySup(s){
+  bulkSupplier=s;
+  document.getElementById("paySupLabel").textContent=s;
+  document.getElementById("paySupSearchDrop").classList.remove("open");
+  document.getElementById("paySupSearchBtn").classList.remove("active");
+  document.getElementById("paySupSearchInp").value="";
+  paySelInvs={};
+  loadPayInvoices(s);
+}
+
+/* טעינת חשבוניות לא שולמו של הספק */
+function loadPayInvoices(supplier){
+  var list=document.getElementById("payInvList");
+  list.innerHTML='<div class="iempty">⏳ טוען...</div>';
+  apiGet("action=getInvoices&supplier="+encodeURIComponent(supplier)+"&status=unpaid",function(d){
+    if(!d.success||!d.invoices||!d.invoices.length){
+      list.innerHTML='<div class="iempty">✅<br>אין חשבוניות פתוחות לספק זה</div>';
+      document.getElementById("payMethodCard").style.display="none";
+      document.getElementById("payTotalBar").style.display="none";
+      document.getElementById("paySelectAll").style.display="none";
+      return;
+    }
+    document.getElementById("paySelectAll").style.display="block";
+    document.getElementById("payTotalBar").style.display="flex";
+    renderPayInvList(d.invoices);
+  },function(){list.innerHTML='<div class="iempty">שגיאת חיבור</div>';});
+}
+
+function renderPayInvList(invs){
+  var list=document.getElementById("payInvList");list.innerHTML="";
+  invs.forEach(function(inv){
+    var div=document.createElement("div");
+    div.className="pay-inv-item";div.id="pi-"+inv.rowId;
+    var amt=parseFloat(inv.amtTotal)||0;
+    div.innerHTML=
+      '<div class="pi-check" id="pck-'+esc(inv.rowId)+'">☐</div>'+
+      '<div class="pi-info">'+
+        '<div class="pi-sup">'+esc(inv.supplier)+(inv.invNum?' <span class="ibadge num">#'+inv.invNum+'</span>':'')+'</div>'+
+        '<div class="pi-details">'+fmtDate(inv.date)+' | <span style="font-family:monospace;">'+esc(inv.digits)+'</span>'+
+          (amt?'<span class="pi-amt"> | ₪'+fmtAmt(amt)+'</span>':'')+'</div>'+
+      '</div>';
+    div.onclick=function(){togglePayInv(inv);};
+    list.appendChild(div);
+  });
+}
+
+function togglePayInv(inv){
+  var id=inv.rowId;
+  var ck=document.getElementById("pck-"+id);
+  var item=document.getElementById("pi-"+id);
+  if(paySelInvs[id]){
+    delete paySelInvs[id];
+    if(ck)ck.textContent="☐";
+    if(item)item.classList.remove("selected");
+  } else {
+    paySelInvs[id]=inv;
+    if(ck)ck.textContent="✅";
+    if(item)item.classList.add("selected");
+  }
+  updatePayTotals();
+}
+
+function toggleSelectAll(){
+  var items=document.querySelectorAll(".pay-inv-item");
+  var allSel=Object.keys(paySelInvs).length===items.length&&items.length>0;
+  items.forEach(function(item){
+    var id=item.id.replace("pi-","");
+    // מצא את ה-invoice מתוך ה-DOM
+    var ck=document.getElementById("pck-"+id);
+    if(allSel){
+      delete paySelInvs[id];
+      if(ck)ck.textContent="☐";
+      item.classList.remove("selected");
+    } else {
+      // שחזר מה-DOM
+      var supEl=item.querySelector(".pi-sup");
+      var detEl=item.querySelector(".pi-details");
+      var amtEl=item.querySelector(".pi-amt");
+      var amt=amtEl?parseFloat((amtEl.textContent||"").replace(/[₪,]/g,""))||0:0;
+      paySelInvs[id]={rowId:id,amtTotal:String(amt)};
+      if(ck)ck.textContent="✅";
+      item.classList.add("selected");
+    }
+  });
+  document.getElementById("selAllLabel").textContent=allSel?"✅ בחר הכל":"☐ בטל הכל";
+  updatePayTotals();
+}
+
+function updatePayTotals(){
+  var keys=Object.keys(paySelInvs);
+  var total=keys.reduce(function(s,k){return s+(parseFloat(paySelInvs[k].amtTotal)||0);},0);
+  document.getElementById("paySelCount").textContent=keys.length+" חשבוניות";
+  document.getElementById("paySelTotal").textContent="₪"+fmtAmt(total);
+  // הצג כרטיס תשלום רק אם נבחרו חשבוניות
+  document.getElementById("payMethodCard").style.display=keys.length>0?"block":"none";
+  // מלא סכום אוטומטי
+  if(keys.length>0){
+    var t=total.toFixed(2);
+    ["bCashAmt","bCheckAmt","bBankAmt","bCreditAmt"].forEach(function(id){
+      var el=document.getElementById(id);if(el&&!el.value)el.value=t;
+    });
+  }
+}
+
+/* אופן תשלום */
+function setBulkPay(m){
+  bulkPayMode=m;
+  ["cash","check","bank","credit"].forEach(function(k){
+    document.getElementById("bpo-"+k).classList.toggle("active",k===m);
+    document.getElementById("bpf-"+k).classList.toggle("open",k===m);
+  });
+}
+
+/* אישור תשלום */
+function confirmBulkPayment(){
+  var keys=Object.keys(paySelInvs);
+  if(!keys.length){toast("יש לבחור חשבוניות","warn");return;}
+  var payStr="";
+  var payAmt="";
+  var checkNum="";var checkDate="";var bankRef="";var creditLast4="";
+  if(bulkPayMode==="cash"){
+    payAmt=document.getElementById("bCashAmt").value;
+    payStr="💵 מזומן ₪"+payAmt;
+  } else if(bulkPayMode==="check"){
+    checkNum=document.getElementById("bCheckNum").value;
+    payAmt=document.getElementById("bCheckAmt").value;
+    checkDate=document.getElementById("bCheckDate").value;
+    payStr="📄 צ'ק #"+checkNum+" ₪"+payAmt+(checkDate?" ("+checkDate+")":"");
+  } else if(bulkPayMode==="bank"){
+    bankRef=document.getElementById("bBankRef").value;
+    payAmt=document.getElementById("bBankAmt").value;
+    payStr="🏦 העברה #"+bankRef+" ₪"+payAmt;
+  } else if(bulkPayMode==="credit"){
+    creditLast4=document.getElementById("bCreditLast4").value;
+    payAmt=document.getElementById("bCreditAmt").value;
+    payStr="💳 אשראי *"+creditLast4+" ₪"+payAmt;
+  }
+  var btn=document.querySelector("#payMethodCard .bsub");
+  btn.classList.add("loading");btn.disabled=true;
+  var res=document.getElementById("bulkPayRes");
+  res.className="sres show";res.textContent="⏳ מעדכן "+keys.length+" חשבוניות...";
+  // שלח לכל חשבונית
+  var done=0,errors=0;
+  keys.forEach(function(rowId){
+    apiPost({
+      action:"updatePayment",rowId:rowId,
+      payment:bulkPayMode,payStr:payStr,
+      payAmount:payAmt,checkNum:checkNum,
+      checkDate:checkDate,bankRef:bankRef,
+      creditLast4:creditLast4
+    },function(r){
+      done++;
+      if(!r.success)errors++;
+      if(done===keys.length){
+        btn.classList.remove("loading");btn.disabled=false;
+        if(errors===0){
+          res.className="sres show";
+          res.textContent="✅ "+keys.length+" חשבוניות עודכנו כ-'שולם' | "+payStr;
+          toast("✅ "+keys.length+" חשבוניות שולמו!","ok");
+          // רענן
+          paySelInvs={};
+          setTimeout(function(){loadPayInvoices(bulkSupplier);},800);
+        } else {
+          res.className="sres show err";
+          res.textContent="⚠️ "+errors+" שגיאות מתוך "+keys.length;
+        }
+      }
+    },function(){
+      done++;errors++;
+      if(done===keys.length){btn.classList.remove("loading");btn.disabled=false;toast("שגיאת חיבור","err");}
+    });
+  });
 }
 
 function updUrl(){
