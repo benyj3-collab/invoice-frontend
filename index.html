@@ -1666,7 +1666,10 @@ function loadHist(){
       bot+='<span class="ipaid '+(isPaid?"yes":"no")+'">'+(isPaid?"✅ שולם":"❌ לא שולם")+'</span>';
       bot+='</div>';
       var btns='<div class="ibtns">';
-      btns+='<button class="ibtn edit" onclick="openEditFull('+JSON.stringify({rowId:inv.rowId,supplier:inv.supplier,date:inv.date,digits:inv.digits,amtTotal:inv.amtTotal||"",category:inv.category||"",note:inv.note||"",payment:inv.payment||"",payAmount:inv.payAmount||"",payAmount2:inv.payAmount2||"",checkNum:inv.checkNum||"",checkNum2:inv.checkNum2||"",checkDate:inv.checkDate||"",checkDate2:inv.checkDate2||""}).replace(/"/g,"&quot;").replace(/'/g,"&#39;")+'">✏️ עריכה</button>';
+      var editData={rowId:inv.rowId,supplier:inv.supplier,date:inv.date,digits:inv.digits,amtTotal:inv.amtTotal||"",category:inv.category||"",note:inv.note||"",payment:inv.payment||"",payAmount:inv.payAmount||"",payAmount2:inv.payAmount2||"",checkNum:inv.checkNum||"",checkNum2:inv.checkNum2||"",checkDate:inv.checkDate||"",checkDate2:inv.checkDate2||""};
+      var editId="ed-"+Math.random().toString(36).substr(2,8);
+      window[editId]=editData;
+      btns+='<button class="ibtn edit" onclick="openEditFull(window[\''+editId+'\'])">✏️ עריכה</button>';
       if(inv.fileUrl) btns+='<button class="ibtn open" onclick="window.open(\''+inv.fileUrl+'\',\'_blank\')">📂 פתח</button>';
       if(!isPaid) btns+='<button class="ibtn pay" onclick="markPaid(\''+esc(inv.rowId)+'\')">💳 שלמתי</button>';
       btns+='</div>';
