@@ -2082,14 +2082,14 @@ function sendPDFReport(){
   var f=document.getElementById("sFrom").value;
   var t2=document.getElementById("sTo").value;
   var res=document.getElementById("eRes");
-  res.className="sres show";res.textContent="⏳ מייצר PDF... עשוי לקחת עד דקה";
+  res.className="sres show";res.textContent="⏳ מייצר PDF... (עד 5 דקות, אל תסגור)";
   var btn=document.querySelector("#page-send .bpurple");
   if(btn){btn.textContent="⏳ מייצר PDF...";btn.disabled=true;}
   // timeout ארוך יותר ל-PDF
   var xhr=new XMLHttpRequest();
   xhr.open("POST",SCRIPT_URL,true);
   xhr.setRequestHeader("Content-Type","text/plain;charset=utf-8");
-  xhr.timeout=120000; // 2 דקות
+  xhr.timeout=300000; // 5 דקות
   xhr.onload=function(){
     var t=(xhr.responseText||"").trim();
     if(btn){btn.textContent='📎 שלח PDF מצורף (לרו"ח)';btn.disabled=false;}
@@ -2109,7 +2109,7 @@ function sendPDFReport(){
   };
   xhr.ontimeout=function(){
     if(btn){btn.textContent='📎 שלח PDF מצורף (לרו"ח)';btn.disabled=false;}
-    res.className="sres show err";res.textContent="⏱ פג זמן — נסה לסנן לפחות חשבוניות";
+    res.className="sres show err";res.textContent="⏱ פג זמן — נסה לסנן לפי ספק ספציפי או תאריך קצר יותר";
   };
   xhr.send(JSON.stringify({action:"sendPDF",email:em,supplier:supParam,dateFrom:f,dateTo:t2}));
 }
