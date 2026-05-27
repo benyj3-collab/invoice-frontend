@@ -873,24 +873,54 @@ ol.steps li strong{color:var(--text);}
     <button class="mclose" onclick="closeModal('editModal')">✕</button>
     <h3>✏️ עריכת חשבונית</h3>
     <input type="hidden" id="editRowId" />
-    <div class="fcol" style="margin-bottom:10px;">
-      <div class="flabel">💰 סכום חשבונית (₪)</div>
-      <input type="number" id="editAmtTotal" placeholder="0.00" inputmode="decimal" />
+
+    <!-- פרטים בסיסיים -->
+    <div class="clabel">פרטי חשבונית</div>
+    <div class="fcol" style="margin-bottom:8px;">
+      <div class="flabel">ספק</div>
+      <div class="sw"><select id="editSupSel"><option value="">בחר ספק</option></select><span class="sa">▾</span></div>
+    </div>
+    <div class="frow" style="margin-bottom:8px;">
+      <div class="fcol">
+        <div class="flabel">📅 תאריך חשבונית</div>
+        <input type="date" id="editDate" />
+      </div>
+      <div class="fcol">
+        <div class="flabel">4 ספרות</div>
+        <input type="text" id="editDigits" maxlength="4" inputmode="numeric" placeholder="_ _ _ _" class="digs" style="font-size:18px;" />
+      </div>
+    </div>
+    <div class="frow" style="margin-bottom:8px;">
+      <div class="fcol">
+        <div class="flabel">💰 סכום (₪)</div>
+        <input type="number" id="editAmtTotal" placeholder="0.00" inputmode="decimal" />
+      </div>
+      <div class="fcol">
+        <div class="flabel">🏷 קטגוריה</div>
+        <div class="sw"><select id="editCat"><option value="">ללא</option></select><span class="sa">▾</span></div>
+      </div>
+    </div>
+    <div class="fcol" style="margin-bottom:8px;">
+      <div class="flabel">💬 הערה</div>
+      <input type="text" id="editNote" placeholder="הערה לחשבונית..." maxlength="200" />
     </div>
     <input type="hidden" id="editAmtBefore" />
+
+    <!-- תשלום -->
     <div class="clabel" style="margin-top:4px;">תשלום</div>
     <div class="popts" style="flex-wrap:wrap;gap:6px;">
-      <div class="popt active" id="epo-none"  onclick="setEditPay('')"      style="display:none;"></div>
+      <div class="popt active" id="epo-none"   onclick="setEditPay('')"       style="display:none;"></div>
       <div class="popt active" id="epo-unpaid" onclick="setEditPay('unpaid')" style="flex:0 0 calc(50% - 3px);">⏳ טרם שולם</div>
       <div class="popt"        id="epo-cash"   onclick="setEditPay('cash')"   style="flex:0 0 calc(50% - 3px);">💵 מזומן</div>
       <div class="popt"        id="epo-check"  onclick="setEditPay('check')"  style="flex:0 0 calc(50% - 3px);">📄 צ׳ק</div>
       <div class="popt"        id="epo-both"   onclick="setEditPay('both')"   style="flex:0 0 calc(50% - 3px);">🔀 מפוצל</div>
-      <div class="popt"        id="epo-bank"   onclick="setEditPay('bank')"   style="flex:1;">🏦 העברה בנקאית</div>
+      <div class="popt"        id="epo-bank"   onclick="setEditPay('bank')"   style="flex:0 0 calc(50% - 3px);">🏦 העברה</div>
+      <div class="popt"        id="epo-credit" onclick="setEditPay('credit')" style="flex:0 0 calc(50% - 3px);">💳 אשראי</div>
     </div>
-    <div class="pf" id="epf-cash"><div class="fcol"><div class="flabel">סכום מזומן (₪)</div><input type="number" id="ecAmt" placeholder="0.00" inputmode="decimal" /></div></div>
+    <div class="pf" id="epf-cash"><div class="fcol"><div class="flabel">סכום (₪)</div><input type="number" id="ecAmt" placeholder="0.00" inputmode="decimal" /></div></div>
     <div class="pf" id="epf-check">
       <div class="frow">
-        <div class="fcol"><div class="flabel">מספר צ׳ק</div><input type="text" id="ecNum" placeholder="123456" inputmode="numeric" /></div>
+        <div class="fcol"><div class="flabel">מספר צ׳ק</div><input type="text" id="ecNum" placeholder="123456" /></div>
         <div class="fcol"><div class="flabel">סכום (₪)</div><input type="number" id="eckAmt" placeholder="0.00" inputmode="decimal" /></div>
       </div>
       <div class="fcol mt8"><div class="flabel">📅 תאריך צ׳ק</div><input type="date" id="ecDate" /></div>
@@ -898,21 +928,28 @@ ol.steps li strong{color:var(--text);}
     <div class="pf" id="epf-both">
       <div class="fcol" style="margin-bottom:8px;"><div class="flabel">סכום מזומן (₪)</div><input type="number" id="ecAmt2" placeholder="0.00" inputmode="decimal" /></div>
       <div class="frow">
-        <div class="fcol"><div class="flabel">מספר צ׳ק</div><input type="text" id="ecNum2" placeholder="123456" inputmode="numeric" /></div>
+        <div class="fcol"><div class="flabel">מספר צ׳ק</div><input type="text" id="ecNum2" placeholder="123456" /></div>
         <div class="fcol"><div class="flabel">סכום צ׳ק (₪)</div><input type="number" id="eckAmt2" placeholder="0.00" inputmode="decimal" /></div>
       </div>
       <div class="fcol mt8"><div class="flabel">📅 תאריך צ׳ק</div><input type="date" id="ecDate2" /></div>
     </div>
     <div class="pf" id="epf-bank">
       <div class="frow">
-        <div class="fcol"><div class="flabel">מספר אסמכתה</div><input type="text" id="ebankRef" placeholder="123456789" inputmode="numeric" /></div>
+        <div class="fcol"><div class="flabel">מספר אסמכתה</div><input type="text" id="ebankRef" placeholder="123456789" /></div>
         <div class="fcol"><div class="flabel">סכום (₪)</div><input type="number" id="ebankAmt" placeholder="0.00" inputmode="decimal" /></div>
       </div>
     </div>
-    <div class="paid-toggle" style="margin-top:12px;">
-      <div class="ptog unpaid active" id="eptog-no"  onclick="setEditPaid(false)">❌ טרם שולם</div>
-      <div class="ptog paid"          id="eptog-yes" onclick="setEditPaid(true)">✅ שולם</div>
+    <div class="pf" id="epf-credit">
+      <div class="frow">
+        <div class="fcol">
+          <div class="flabel">חברת אשראי</div>
+          <div class="sw"><select id="ecreditCo"><option value="ויזה">ויזה</option><option value="מאסטרקארד">מאסטרקארד</option><option value="ישראכרט">ישראכרט</option><option value="אמריקן אקספרס">אמריקן אקספרס</option><option value="דיינרס">דיינרס</option></select><span class="sa">▾</span></div>
+        </div>
+        <div class="fcol"><div class="flabel">4 ספרות אחרונות</div><input type="text" id="ecreditLast4" placeholder="1234" maxlength="4" /></div>
+      </div>
+      <div class="fcol mt8"><div class="flabel">סכום (₪)</div><input type="number" id="ecreditAmt" placeholder="0.00" inputmode="decimal" /></div>
     </div>
+
     <button class="bsub mt8" id="saveEditBtn" onclick="saveEdit()" style="margin-top:14px;">
       <span class="bt">💾 שמור שינויים</span><div class="sp"></div>
     </button>
@@ -1360,16 +1397,19 @@ function updInvNum(){
 }
 
 function fmtDate(d){
-  if(!d) return"—";
-  // אם זה timestamp או תאריך מלא
+  if(!d)return"—";
   var dt=new Date(d);
-  if(!isNaN(dt.getTime())){
-    return p2(dt.getDate())+"/"+p2(dt.getMonth()+1)+"/"+dt.getFullYear();
+  if(!isNaN(dt.getTime())&&String(d).indexOf("T")===-1){
+    // פורמט YYYY-MM-DD
+    var p=String(d).substring(0,10).split("-");
+    if(p.length===3)return p[2]+"-"+p[1]+"-"+p[0];
   }
-  // אם זה כבר בפורמט YYYY-MM-DD
+  if(!isNaN(dt.getTime())){
+    return p2(dt.getDate())+"-"+p2(dt.getMonth()+1)+"-"+dt.getFullYear();
+  }
   if(String(d).match(/^\d{4}-\d{2}-\d{2}/)){
-    var parts=String(d).substring(0,10).split("-");
-    return parts[2]+"/"+parts[1]+"/"+parts[0];
+    var pts=String(d).substring(0,10).split("-");
+    return pts[2]+"-"+pts[1]+"-"+pts[0];
   }
   return String(d);
 }
@@ -1389,13 +1429,13 @@ function setPay(m){
 }
 function setEditPay(m){
   editPayMode=m;
-  ["none","cash","check","both","bank"].forEach(function(k){
+  ["none","unpaid","cash","check","both","bank","credit"].forEach(function(k){
     var el=document.getElementById("epo-"+k);
-    if(el) el.classList.toggle("active",k===(m||"none"));
+    if(el)el.classList.toggle("active",k===(m||"unpaid"));
   });
-  ["cash","check","both","bank"].forEach(function(k){
+  ["cash","check","both","bank","credit"].forEach(function(k){
     var el=document.getElementById("epf-"+k);
-    if(el) el.classList.toggle("open",k===m);
+    if(el)el.classList.toggle("open",k===m);
   });
 }
 function setPaid(v){
@@ -1626,7 +1666,7 @@ function loadHist(){
       bot+='<span class="ipaid '+(isPaid?"yes":"no")+'">'+(isPaid?"✅ שולם":"❌ לא שולם")+'</span>';
       bot+='</div>';
       var btns='<div class="ibtns">';
-      btns+='<button class="ibtn edit" onclick="openEdit(\''+esc(inv.rowId)+'\',\''+esc(inv.payment)+'\',\''+esc(inv.amount)+'\',\''+esc(inv.amount2)+'\',\''+esc(inv.checkNum)+'\',\''+esc(inv.checkNum2)+'\',\''+esc(inv.checkDate)+'\',\''+esc(inv.checkDate2)+'\',\''+(isPaid?"1":"0")+'\',\''+esc(inv.amtBefore||"")+'\',\''+esc(inv.amtTotal||"")+'\')">✏️ עריכה</button>';
+      btns+='<button class="ibtn edit" onclick="openEditFull('+JSON.stringify({rowId:inv.rowId,supplier:inv.supplier,date:inv.date,digits:inv.digits,amtTotal:inv.amtTotal||"",category:inv.category||"",note:inv.note||"",payment:inv.payment||"",payAmount:inv.payAmount||"",payAmount2:inv.payAmount2||"",checkNum:inv.checkNum||"",checkNum2:inv.checkNum2||"",checkDate:inv.checkDate||"",checkDate2:inv.checkDate2||""}).replace(/"/g,"&quot;").replace(/'/g,"&#39;")+'">✏️ עריכה</button>';
       if(inv.fileUrl) btns+='<button class="ibtn open" onclick="window.open(\''+inv.fileUrl+'\',\'_blank\')">📂 פתח</button>';
       if(!isPaid) btns+='<button class="ibtn pay" onclick="markPaid(\''+esc(inv.rowId)+'\')">💳 שלמתי</button>';
       btns+='</div>';
@@ -1638,48 +1678,85 @@ function loadHist(){
 
 function markPaid(rowId){
   // פתח מודל עריכה עם מיקוד על תשלום
-  openEdit(rowId,"","","","","","","","0","","");
-  // גלול לאזור התשלום
+  openEditFull({rowId:rowId,supplier:"",date:"",digits:"",amtTotal:"",category:"",note:"",payment:"",payAmount:"",payAmount2:"",checkNum:"",checkNum2:"",checkDate:"",checkDate2:""});
   setTimeout(function(){
     var el=document.getElementById("epo-cash");
-    if(el) el.scrollIntoView({behavior:"smooth",block:"center"});
+    if(el)el.scrollIntoView({behavior:"smooth",block:"center"});
   },300);
 }
 
-/* ---- Edit Modal ---- */
-function openEdit(rowId,payment,amount,amount2,checkNum,checkNum2,checkDate,checkDate2,paid,amtBefore,amtTotal){
-  document.getElementById("editRowId").value=rowId;
-  document.getElementById("editAmtBefore").value=amtBefore||"";
-  document.getElementById("editAmtTotal").value=amtTotal||"";
-  setEditPay(payment||"");
-  setEditPaid(paid==="1");
-  document.getElementById("ecAmt").value=amount||"";
-  document.getElementById("ecNum").value=checkNum||"";
-  document.getElementById("eckAmt").value=amount||"";
-  document.getElementById("ecDate").value=checkDate||"";
-  document.getElementById("ecAmt2").value=amount||"";
-  document.getElementById("ecNum2").value=checkNum2||"";
-  document.getElementById("eckAmt2").value=amount2||"";
-  document.getElementById("ecDate2").value=checkDate2||"";
+/* ---- Edit Modal מלא ---- */
+function openEditFull(inv){
+  if(typeof inv==="string") inv=JSON.parse(inv);
+  document.getElementById("editRowId").value=inv.rowId||"";
+  document.getElementById("editAmtTotal").value=inv.amtTotal||"";
+  document.getElementById("editAmtBefore").value="";
+  document.getElementById("editNote").value=inv.note||"";
+  // ספק
+  var supSel=document.getElementById("editSupSel");
+  supSel.innerHTML='<option value="">בחר ספק</option>';
+  sups.forEach(function(s){var o=document.createElement("option");o.value=s;o.textContent=s;if(s===inv.supplier)o.selected=true;supSel.appendChild(o);});
+  // תאריך וספרות
+  document.getElementById("editDate").value=inv.date||"";
+  document.getElementById("editDigits").value=inv.digits||"";
+  // קטגוריה
+  var catSel=document.getElementById("editCat");
+  catSel.innerHTML='<option value="">ללא</option>';
+  CATS.forEach(function(c){var o=document.createElement("option");o.value=c;o.textContent=c;if(c===inv.category)o.selected=true;catSel.appendChild(o);});
+  // תשלום
+  var pm=inv.payment||"";
+  var mode="unpaid";
+  if(pm.indexOf("מזומן")!==-1&&pm.indexOf("צ'ק")!==-1)mode="both";
+  else if(pm.indexOf("מזומן")!==-1)mode="cash";
+  else if(pm.indexOf("צ'ק")!==-1)mode="check";
+  else if(pm.indexOf("העברה")!==-1)mode="bank";
+  else if(pm.indexOf("אשראי")!==-1)mode="credit";
+  setEditPay(mode);
+  document.getElementById("ecAmt").value=inv.payAmount||"";
+  document.getElementById("eckAmt").value=inv.payAmount||"";
+  document.getElementById("ecNum").value=inv.checkNum||"";
+  document.getElementById("ecDate").value=inv.checkDate||"";
+  document.getElementById("ecAmt2").value=inv.payAmount2||"";
+  document.getElementById("ecNum2").value=inv.checkNum2||"";
+  document.getElementById("eckAmt2").value=inv.payAmount2||"";
+  document.getElementById("ecDate2").value=inv.checkDate2||"";
+  document.getElementById("ebankRef").value=inv.checkNum||"";
+  document.getElementById("ebankAmt").value=inv.payAmount||"";
   document.getElementById("editModal").classList.add("open");
 }
+
+// legacy
+function openEdit(rowId,payment,amount,amount2,checkNum,checkNum2,checkDate,checkDate2,paid,amtBefore,amtTotal){
+  openEditFull({rowId:rowId,supplier:"",date:"",digits:"",amtTotal:amtTotal||"",category:"",note:"",payment:payment||"",payAmount:amount||"",payAmount2:amount2||"",checkNum:checkNum||"",checkNum2:checkNum2||"",checkDate:checkDate||"",checkDate2:checkDate2||""});
+}
+
 function closeModal(id){document.getElementById(id).classList.remove("open");}
 
 function saveEdit(){
   var rowId=document.getElementById("editRowId").value;
   var btn=document.getElementById("saveEditBtn");
   btn.classList.add("loading");btn.disabled=true;
+  var isPaid=editPayMode!=="unpaid"&&editPayMode!=="";
   var pl={
-    action:"updatePayment",rowId:rowId,paid:editPaidStatus,
-    payment:editPayMode,
-    amtBefore:"",
+    action:"updateInvoiceFull",
+    rowId:rowId,
+    supplier:document.getElementById("editSupSel").value||"",
+    date:document.getElementById("editDate").value||"",
+    digits:document.getElementById("editDigits").value||"",
     amtTotal:document.getElementById("editAmtTotal").value||"",
+    category:document.getElementById("editCat").value||"",
+    note:document.getElementById("editNote").value||"",
+    paid:isPaid,
+    payment:editPayMode,
     payAmount:editPayMode==="cash"?document.getElementById("ecAmt").value:
               editPayMode==="check"?document.getElementById("eckAmt").value:
-              editPayMode==="bank"?document.getElementById("ebankAmt").value:"",
+              editPayMode==="bank"?document.getElementById("ebankAmt").value:
+              editPayMode==="credit"?document.getElementById("ecreditAmt").value:
+              editPayMode==="both"?document.getElementById("ecAmt2").value:"",
     payAmount2:editPayMode==="both"?document.getElementById("eckAmt2").value:"",
     checkNum: editPayMode==="check"?document.getElementById("ecNum").value:
-              editPayMode==="bank"?document.getElementById("ebankRef").value:"",
+              editPayMode==="bank"?document.getElementById("ebankRef").value:
+              editPayMode==="credit"?(document.getElementById("ecreditCo").value+" *"+document.getElementById("ecreditLast4").value):"",
     checkNum2:editPayMode==="both"?document.getElementById("ecNum2").value:"",
     checkDate: editPayMode==="check"?document.getElementById("ecDate").value:"",
     checkDate2:editPayMode==="both"?document.getElementById("ecDate2").value:""
@@ -2000,21 +2077,38 @@ function sendPDFReport(){
   var sendSups=getSendSups();
   var supParam=sendSups.indexOf("all")!==-1?"all":sendSups.join(",");
   var f=document.getElementById("sFrom").value;
-  var t=document.getElementById("sTo").value;
+  var t2=document.getElementById("sTo").value;
   var res=document.getElementById("eRes");
-  res.className="sres show";res.textContent="⏳ מייצר PDF... עשוי לקחת כ-30 שניות";
+  res.className="sres show";res.textContent="⏳ מייצר PDF... עשוי לקחת עד דקה";
   var btn=document.querySelector("#page-send .bpurple");
-  if(btn){btn.textContent="⏳ מייצר...";btn.disabled=true;}
-  apiPost({action:"sendPDF",email:em,supplier:supParam,dateFrom:f,dateTo:t},
-    function(d){
-      if(btn){btn.textContent='📎 שלח PDF מצורף (לרו"ח)';btn.disabled=false;}
-      if(d.success){res.className="sres show";res.textContent="✅ "+d.message;toast("✅ PDF נשלח!","ok");}
-      else{res.className="sres show err";res.textContent="❌ "+(d.error||"שגיאה");}
-    },
-    function(){
-      if(btn){btn.textContent='📎 שלח PDF מצורף (לרו"ח)';btn.disabled=false;}
-      res.className="sres show err";res.textContent="❌ שגיאת חיבור";
-    });
+  if(btn){btn.textContent="⏳ מייצר PDF...";btn.disabled=true;}
+  // timeout ארוך יותר ל-PDF
+  var xhr=new XMLHttpRequest();
+  xhr.open("POST",SCRIPT_URL,true);
+  xhr.setRequestHeader("Content-Type","text/plain;charset=utf-8");
+  xhr.timeout=120000; // 2 דקות
+  xhr.onload=function(){
+    var t=(xhr.responseText||"").trim();
+    if(btn){btn.textContent='📎 שלח PDF מצורף (לרו"ח)';btn.disabled=false;}
+    if(t.charAt(0)==="{"){
+      try{
+        var d=JSON.parse(t);
+        if(d.success){res.className="sres show";res.textContent="✅ "+d.message;toast("✅ PDF נשלח!","ok");}
+        else{res.className="sres show err";res.textContent="❌ "+(d.error||"שגיאה");}
+        return;
+      }catch(e){}
+    }
+    res.className="sres show err";res.textContent="❌ שגיאת חיבור";
+  };
+  xhr.onerror=function(){
+    if(btn){btn.textContent='📎 שלח PDF מצורף (לרו"ח)';btn.disabled=false;}
+    res.className="sres show err";res.textContent="❌ שגיאת חיבור";
+  };
+  xhr.ontimeout=function(){
+    if(btn){btn.textContent='📎 שלח PDF מצורף (לרו"ח)';btn.disabled=false;}
+    res.className="sres show err";res.textContent="⏱ פג זמן — נסה לסנן לפחות חשבוניות";
+  };
+  xhr.send(JSON.stringify({action:"sendPDF",email:em,supplier:supParam,dateFrom:f,dateTo:t2}));
 }
 
 /* ============================================================
