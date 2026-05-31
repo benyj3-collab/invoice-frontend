@@ -478,8 +478,8 @@ ol.steps li strong{color:var(--text);}
         <div id="pcnt" class="pcnt"></div>
         <div id="plist" class="plist"></div>
         <div class="apbtns">
-          <button class="bpage" onclick="document.getElementById('fileC').click()">📷 צלם דף</button>
-          <button class="bpage" onclick="document.getElementById('fileG').click()">🖼 מהגלריה</button>
+          <button class="bpage" onclick="saveDraft();document.getElementById('fileC').click()">📷 צלם דף</button>
+          <button class="bpage" onclick="saveDraft();document.getElementById('fileG').click()">🖼 מהגלריה</button>
         </div>
         <input type="file" id="fileC" accept="image/*" capture="environment" onchange="addPage(this)" />
         <input type="file" id="fileG" accept="image/*" multiple onchange="addPages(this)" />
@@ -1031,6 +1031,11 @@ var DRAFT_KEY="inv_draft5";
 var _draftTimer=null;
 
 window.addEventListener("DOMContentLoaded",function(){
+  // נקה נתונים פגומים
+  try{
+    var draft=localStorage.getItem(DRAFT_KEY);
+    if(draft)JSON.parse(draft); // בדוק תקינות
+  }catch(e){localStorage.removeItem(DRAFT_KEY);}
   setToday();
   if(!SCRIPT_URL){document.getElementById("setupPage").style.display="block";}
   else{startApp();}
@@ -1042,8 +1047,14 @@ function startApp(){
   rndCatSelects();
   buildCatsList();
   loadSups();
-  // שחזר טיוטה אחרי טעינת ספקים
-  setTimeout(restoreDraft, 800);
+  // שחזר טיוטה — מחכה לטעינת ספקים
+  setTimeout(function(){
+    restoreDraft();
+    // אם חזרנו ממצלמה — הצג הודעה
+    if(localStorage.getItem(DRAFT_KEY)){
+      setSt("ok","מחובר ✓");
+    }
+  }, 1200);
 }
 
 function saveDraft(){
@@ -1066,24 +1077,29 @@ function restoreDraft(){
     var raw=localStorage.getItem(DRAFT_KEY);
     if(!raw)return;
     var d=JSON.parse(raw);
-    if(!d.sup&&!d.digits)return; // טיוטה ריקה
-    // שחזר ספק
+    if(!d||typeof d!=="object")return;
+    if(!d.sup&&!d.digits)return;
     if(d.sup){
-      document.getElementById("supSel").value=d.sup;
+      var supEl=document.getElementById("supSel");
+      if(supEl)supEl.value=d.sup;
       var lbl=document.getElementById("supSelLabel");
       if(lbl){lbl.textContent=d.supLabel||d.sup;lbl.style.color="var(--text)";}
     }
-    if(d.digits) document.getElementById("digsInp").value=d.digits;
-    if(d.date)   document.getElementById("dateInp").value=d.date;
-    if(d.amt)    document.getElementById("amtTotal").value=d.amt;
-    if(d.note&&document.getElementById("noteInp")) document.getElementById("noteInp").value=d.note;
-    if(d.pay)    setPay(d.pay);
+    var digsEl=document.getElementById("digsInp");
+    if(d.digits&&digsEl)digsEl.value=d.digits;
+    var dateEl=document.getElementById("dateInp");
+    if(d.date&&dateEl)dateEl.value=d.date;
+    var amtEl=document.getElementById("amtTotal");
+    if(d.amt&&amtEl)amtEl.value=d.amt;
+    var noteEl=document.getElementById("noteInp");
+    if(d.note&&noteEl)noteEl.value=d.note;
+    if(d.pay)setPay(d.pay);
     updSum();
-    // הראה הודעה
-    if(d.sup||d.digits){
-      toast("📋 טיוטה שוחזרה אוטומטית","ok");
-    }
-  }catch(e){}
+    if(d.sup||d.digits)toast("📋 טיוטה שוחזרה","ok");
+  }catch(e){
+    // טיוטה פגומה — נקה
+    localStorage.removeItem(DRAFT_KEY);
+  }
 }
 
 function clearDraft(){
