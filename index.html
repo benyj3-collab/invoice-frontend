@@ -965,7 +965,7 @@ var sups = JSON.parse(localStorage.getItem(SK)||"[]");
 var supCats = JSON.parse(localStorage.getItem(CK)||"{}");
 var invCounter = parseInt(localStorage.getItem(CNK)||"0")||0;
 function getNextInvNum(){invCounter++;localStorage.setItem(CNK,String(invCounter));return invCounter;}
-var MAX_PX=600, QUALITY=0.45;
+var MAX_PX=900, QUALITY=0.60;
 var pages=[], payMode="", paidStatus=false, editPayMode="", editPaidStatus=false, ttm;
 var HEKTZAA_MIN=11800; // סכום מינימום להקצאה
 var DEFAULT_CATS=["מזון כללי","לחם","חלב","שתיה","סיגריות","ניקיון","בשר ודגים","פירות וירקות","אחר"];
@@ -1039,10 +1039,57 @@ function startApp(){
   rndCatSelects();
   buildCatsList();
   loadSups();
+  // שחזר טיוטה אחרי טעינת ספקים
+  setTimeout(restoreDraft, 800);
+}
+
+var DRAFT_KEY="inv_draft5";
+
+function saveDraft(){
+  try{
+    var draft={
+      sup:document.getElementById("supSel").value||"",
+      supLabel:document.getElementById("supSelLabel").textContent||"",
+      digits:document.getElementById("digsInp").value||"",
+      date:document.getElementById("dateInp").value||"",
+      amt:document.getElementById("amtTotal").value||"",
+      note:document.getElementById("noteInp")?document.getElementById("noteInp").value||"":"",
+      pay:payMode
+    };
+    localStorage.setItem(DRAFT_KEY,JSON.stringify(draft));
+  }catch(e){}
+}
+
+function restoreDraft(){
+  try{
+    var raw=localStorage.getItem(DRAFT_KEY);
+    if(!raw)return;
+    var d=JSON.parse(raw);
+    if(!d.sup&&!d.digits)return; // טיוטה ריקה
+    // שחזר ספק
+    if(d.sup){
+      document.getElementById("supSel").value=d.sup;
+      var lbl=document.getElementById("supSelLabel");
+      if(lbl){lbl.textContent=d.supLabel||d.sup;lbl.style.color="var(--text)";}
+    }
+    if(d.digits) document.getElementById("digsInp").value=d.digits;
+    if(d.date)   document.getElementById("dateInp").value=d.date;
+    if(d.amt)    document.getElementById("amtTotal").value=d.amt;
+    if(d.note&&document.getElementById("noteInp")) document.getElementById("noteInp").value=d.note;
+    if(d.pay)    setPay(d.pay);
+    updSum();
+    // הראה הודעה
+    if(d.sup||d.digits){
+      toast("📋 טיוטה שוחזרה אוטומטית","ok");
+    }
+  }catch(e){}
+}
+
+function clearDraft(){
+  localStorage.removeItem(DRAFT_KEY);
 }
 
 function setToday(){
-  var d=new Date(),s=d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate());
   document.getElementById("dateInp").value=s;
 }
 function p2(n){return String(n).padStart(2,"0");}
@@ -1506,7 +1553,11 @@ function rndPages(){
 function rmPage(i){pages.splice(i,1);rndPages();updSum();}
 
 /* ---- Summary ---- */
+var _draftTimer=null;
 function updSum(){
+  // שמור טיוטה עם debounce — לא בכל לחיצה
+  clearTimeout(_draftTimer);
+  _draftTimer=setTimeout(saveDraft,1500);
   var box=document.getElementById("summBox");
   var s=document.getElementById("supSel").value,d=document.getElementById("digsInp").value,t=document.getElementById("dateInp").value;
   var amt=document.getElementById("amtTotal").value;
@@ -1601,6 +1652,7 @@ function submitInvoice(s,d,t,amt,hektzaaNum){
     if(r.success){
       var msg="✅ נשמר! #"+invNum;
       if(hektzaaNum)msg+=" | הקצאה: "+hektzaaNum;
+      clearDraft(); // נקה טיוטה
       toast(msg,"ok");reset();
     }
     else if(r.duplicate){
