@@ -1027,6 +1027,9 @@ function generateIcon(){
   }catch(e){}
 }
 
+var DRAFT_KEY="inv_draft5";
+var _draftTimer=null;
+
 window.addEventListener("DOMContentLoaded",function(){
   setToday();
   if(!SCRIPT_URL){document.getElementById("setupPage").style.display="block";}
@@ -1042,8 +1045,6 @@ function startApp(){
   // שחזר טיוטה אחרי טעינת ספקים
   setTimeout(restoreDraft, 800);
 }
-
-var DRAFT_KEY="inv_draft5";
 
 function saveDraft(){
   try{
@@ -1553,7 +1554,6 @@ function rndPages(){
 function rmPage(i){pages.splice(i,1);rndPages();updSum();}
 
 /* ---- Summary ---- */
-var _draftTimer=null;
 function updSum(){
   // שמור טיוטה עם debounce — לא בכל לחיצה
   clearTimeout(_draftTimer);
