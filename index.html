@@ -1091,6 +1091,8 @@ function clearDraft(){
 }
 
 function setToday(){
+  var d=new Date();
+  var s=d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate());
   document.getElementById("dateInp").value=s;
 }
 function p2(n){return String(n).padStart(2,"0");}
