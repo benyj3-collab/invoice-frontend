@@ -478,8 +478,8 @@ ol.steps li strong{color:var(--text);}
         <div id="pcnt" class="pcnt"></div>
         <div id="plist" class="plist"></div>
         <div class="apbtns">
-          <button class="bpage" onclick="saveDraft();document.getElementById('fileC').click()">📷 צלם דף</button>
-          <button class="bpage" onclick="saveDraft();document.getElementById('fileG').click()">🖼 מהגלריה</button>
+          <button class="bpage" onclick="document.getElementById('fileC').click()">📷 צלם דף</button>
+          <button class="bpage" onclick="document.getElementById('fileG').click()">🖼 מהגלריה</button>
         </div>
         <input type="file" id="fileC" accept="image/*" capture="environment" onchange="addPage(this)" />
         <input type="file" id="fileG" accept="image/*" multiple onchange="addPages(this)" />
@@ -965,7 +965,7 @@ var sups = JSON.parse(localStorage.getItem(SK)||"[]");
 var supCats = JSON.parse(localStorage.getItem(CK)||"{}");
 var invCounter = parseInt(localStorage.getItem(CNK)||"0")||0;
 function getNextInvNum(){invCounter++;localStorage.setItem(CNK,String(invCounter));return invCounter;}
-var MAX_PX=900, QUALITY=0.60;
+var MAX_PX=1200, QUALITY=0.82;
 var pages=[], payMode="", paidStatus=false, editPayMode="", editPaidStatus=false, ttm;
 var HEKTZAA_MIN=11800; // סכום מינימום להקצאה
 var DEFAULT_CATS=["מזון כללי","לחם","חלב","שתיה","סיגריות","ניקיון","בשר ודגים","פירות וירקות","אחר"];
@@ -1027,15 +1027,11 @@ function generateIcon(){
   }catch(e){}
 }
 
-var DRAFT_KEY="inv_draft5";
-var _draftTimer=null;
+function saveDraft(){}
+function restoreDraft(){}
+function clearDraft(){}
 
 window.addEventListener("DOMContentLoaded",function(){
-  // נקה נתונים פגומים
-  try{
-    var draft=localStorage.getItem(DRAFT_KEY);
-    if(draft)JSON.parse(draft); // בדוק תקינות
-  }catch(e){localStorage.removeItem(DRAFT_KEY);}
   setToday();
   if(!SCRIPT_URL){document.getElementById("setupPage").style.display="block";}
   else{startApp();}
@@ -1047,64 +1043,8 @@ function startApp(){
   rndCatSelects();
   buildCatsList();
   loadSups();
-  // שחזר טיוטה — מחכה לטעינת ספקים
-  setTimeout(function(){
-    restoreDraft();
-    // אם חזרנו ממצלמה — הצג הודעה
-    if(localStorage.getItem(DRAFT_KEY)){
-      setSt("ok","מחובר ✓");
-    }
-  }, 1200);
 }
 
-function saveDraft(){
-  try{
-    var draft={
-      sup:document.getElementById("supSel").value||"",
-      supLabel:document.getElementById("supSelLabel").textContent||"",
-      digits:document.getElementById("digsInp").value||"",
-      date:document.getElementById("dateInp").value||"",
-      amt:document.getElementById("amtTotal").value||"",
-      note:document.getElementById("noteInp")?document.getElementById("noteInp").value||"":"",
-      pay:payMode
-    };
-    localStorage.setItem(DRAFT_KEY,JSON.stringify(draft));
-  }catch(e){}
-}
-
-function restoreDraft(){
-  try{
-    var raw=localStorage.getItem(DRAFT_KEY);
-    if(!raw)return;
-    var d=JSON.parse(raw);
-    if(!d||typeof d!=="object")return;
-    if(!d.sup&&!d.digits)return;
-    if(d.sup){
-      var supEl=document.getElementById("supSel");
-      if(supEl)supEl.value=d.sup;
-      var lbl=document.getElementById("supSelLabel");
-      if(lbl){lbl.textContent=d.supLabel||d.sup;lbl.style.color="var(--text)";}
-    }
-    var digsEl=document.getElementById("digsInp");
-    if(d.digits&&digsEl)digsEl.value=d.digits;
-    var dateEl=document.getElementById("dateInp");
-    if(d.date&&dateEl)dateEl.value=d.date;
-    var amtEl=document.getElementById("amtTotal");
-    if(d.amt&&amtEl)amtEl.value=d.amt;
-    var noteEl=document.getElementById("noteInp");
-    if(d.note&&noteEl)noteEl.value=d.note;
-    if(d.pay)setPay(d.pay);
-    updSum();
-    if(d.sup||d.digits)toast("📋 טיוטה שוחזרה","ok");
-  }catch(e){
-    // טיוטה פגומה — נקה
-    localStorage.removeItem(DRAFT_KEY);
-  }
-}
-
-function clearDraft(){
-  localStorage.removeItem(DRAFT_KEY);
-}
 
 function setToday(){
   var d=new Date();
@@ -1517,7 +1457,6 @@ function setEditPaid(v){
 
 /* ---- Photos ---- */
 function compress(file,cb){
-  // setTimeout 0 כדי לא לחסום את ה-UI
   setTimeout(function(){
     var r=new FileReader();
     r.onload=function(e){
@@ -1526,24 +1465,14 @@ function compress(file,cb){
         setTimeout(function(){
           try{
             var w=img.width,h=img.height;
-            // שמור יחס גובה-רוחב
             if(w>MAX_PX||h>MAX_PX){
               if(w>h){h=Math.round(h*MAX_PX/w);w=MAX_PX;}
               else{w=Math.round(w*MAX_PX/h);h=MAX_PX;}
             }
-            var cv=document.createElement("canvas");cv.width=w;cv.height=h;
+            var cv=document.createElement("canvas");
+            cv.width=w;cv.height=h;
             cv.getContext("2d").drawImage(img,0,0,w,h);
-            // נסה באיכות גבוהה קודם
             var du=cv.toDataURL("image/jpeg",QUALITY);
-            // אם גדול מ-800KB — הורד איכות
-            if(du.length>1100000){du=cv.toDataURL("image/jpeg",0.60);}
-            // אם עדיין גדול מ-1.2MB — הורד רזולוציה
-            if(du.length>1650000){
-              var cv2=document.createElement("canvas");
-              cv2.width=Math.round(w*0.7);cv2.height=Math.round(h*0.7);
-              cv2.getContext("2d").drawImage(img,0,0,cv2.width,cv2.height);
-              du=cv2.toDataURL("image/jpeg",0.65);
-            }
             cb({b64:du.split(",")[1],mime:"image/jpeg",thumb:du});
           }catch(e){toast("שגיאה בעיבוד תמונה","err");}
         },50);
@@ -1573,9 +1502,6 @@ function rmPage(i){pages.splice(i,1);rndPages();updSum();}
 
 /* ---- Summary ---- */
 function updSum(){
-  // שמור טיוטה עם debounce — לא בכל לחיצה
-  clearTimeout(_draftTimer);
-  _draftTimer=setTimeout(saveDraft,1500);
   var box=document.getElementById("summBox");
   var s=document.getElementById("supSel").value,d=document.getElementById("digsInp").value,t=document.getElementById("dateInp").value;
   var amt=document.getElementById("amtTotal").value;
@@ -1670,7 +1596,6 @@ function submitInvoice(s,d,t,amt,hektzaaNum){
     if(r.success){
       var msg="✅ נשמר! #"+invNum;
       if(hektzaaNum)msg+=" | הקצאה: "+hektzaaNum;
-      clearDraft(); // נקה טיוטה
       toast(msg,"ok");reset();
     }
     else if(r.duplicate){
