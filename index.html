@@ -1456,37 +1456,61 @@ function setEditPaid(v){
 }
 
 /* ---- Photos ---- */
-/* ---- Auto Crop ---- */
 function autoCrop(canvas, ctx, w, h){
   try{
     var data=ctx.getImageData(0,0,w,h).data;
-    var THRESH=120; // פיקסלים בהירים מ-120 נחשבים "מסמך"
-    var top=h,bottom=0,left=w,right=0;
-    for(var y=0;y<h;y++){
-      for(var x=0;x<w;x++){
-        var i=(y*w+x)*4;
-        var bright=(data[i]+data[i+1]+data[i+2])/3;
-        if(bright>THRESH){
-          if(y<top)top=y;
-          if(y>bottom)bottom=y;
-          if(x<left)left=x;
-          if(x>right)right=x;
+
+    // בנה מפת בהירות מוקטנת (כל 4 פיקסלים)
+    var step=4;
+    var cols=Math.floor(w/step), rows=Math.floor(h/step);
+    var bright=[];
+    for(var y=0;y<rows;y++){
+      bright[y]=[];
+      for(var x=0;x<cols;x++){
+        var px=((y*step)*w+(x*step))*4;
+        bright[y][x]=(data[px]+data[px+1]+data[px+2])/3;
+      }
+    }
+
+    // מצא median brightness
+    var all=[];
+    for(var y=0;y<rows;y++) for(var x=0;x<cols;x++) all.push(bright[y][x]);
+    all.sort(function(a,b){return a-b;});
+    var median=all[Math.floor(all.length/2)];
+
+    // סף: פיקסלים בהירים מ-median+30 נחשבים "מסמך"
+    var thresh=Math.min(median+40, 180);
+
+    var top=h, bottom=0, left=w, right=0;
+    var found=false;
+    for(var y=0;y<rows;y++){
+      for(var x=0;x<cols;x++){
+        if(bright[y][x]>thresh){
+          var py=y*step, px2=x*step;
+          if(py<top)top=py;
+          if(py>bottom)bottom=py;
+          if(px2<left)left=px2;
+          if(px2>right)right=px2;
+          found=true;
         }
       }
     }
-    // אם לא מצא אזור בהיר מספיק — החזר מקורי
-    if(right<=left||bottom<=top)return null;
-    // הוסף מרווח קטן
-    var pad=Math.round(Math.min(w,h)*0.01);
+
+    if(!found||right<=left||bottom<=top)return null;
+
+    // מרווח קטן
+    var pad=Math.round(Math.min(w,h)*0.015);
     top=Math.max(0,top-pad);
     bottom=Math.min(h-1,bottom+pad);
     left=Math.max(0,left-pad);
     right=Math.min(w-1,right+pad);
+
     var cw=right-left, ch=bottom-top;
-    // רק אם החיתוך מוריד לפחות 10% — כדאי
-    if(cw*ch > w*h*0.9) return null;
+    // תמיד חתוך אם מצאנו גבולות ברורים
+    if(cw<w*0.3||ch<h*0.3)return null; // אל תחתוך יותר מ-70%
+
     var cv2=document.createElement("canvas");
-    cv2.width=cw;cv2.height=ch;
+    cv2.width=cw; cv2.height=ch;
     cv2.getContext("2d").drawImage(canvas,left,top,cw,ch,0,0,cw,ch);
     return cv2;
   }catch(e){return null;}
@@ -1512,6 +1536,9 @@ function compress(file,cb){
             // נסה auto-crop
             var cropped=autoCrop(cv,ctx,w,h);
             var finalCv=cropped||cv;
+            if(cropped){
+              toast("✂️ שוליים הוסרו אוטומטית","ok");
+            }
             var du=finalCv.toDataURL("image/jpeg",QUALITY);
             cb({b64:du.split(",")[1],mime:"image/jpeg",thumb:du});
           }catch(e){toast("שגיאה בעיבוד תמונה","err");}
