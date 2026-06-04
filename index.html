@@ -1536,9 +1536,6 @@ function compress(file,cb){
             // נסה auto-crop
             var cropped=autoCrop(cv,ctx,w,h);
             var finalCv=cropped||cv;
-            if(cropped){
-              toast("✂️ שוליים הוסרו אוטומטית","ok");
-            }
             var du=finalCv.toDataURL("image/jpeg",QUALITY);
             cb({b64:du.split(",")[1],mime:"image/jpeg",thumb:du});
           }catch(e){toast("שגיאה בעיבוד תמונה","err");}
