@@ -855,7 +855,7 @@ ol.steps li strong{color:var(--text);}
       <div style="font-size:36px;">🏛️</div>
       <h3 style="color:var(--gold);margin-bottom:6px;">נדרש מספר הקצאה</h3>
       <p style="font-size:13px;color:var(--text2);line-height:1.6;">
-        הסכום <strong id="hektzaaAmt"></strong> עולה על ₪11,800<br>
+        הסכום <strong id="hektzaaAmt"></strong> עולה על ₪5,900 כולל מע"מ<br>
         ומחייב הקצאת מספר לצרכי מע"מ
       </p>
     </div>
@@ -967,7 +967,7 @@ var invCounter = parseInt(localStorage.getItem(CNK)||"0")||0;
 function getNextInvNum(){invCounter++;localStorage.setItem(CNK,String(invCounter));return invCounter;}
 var MAX_PX=1200, QUALITY=0.82;
 var pages=[], payMode="", paidStatus=false, editPayMode="", editPaidStatus=false, ttm;
-var HEKTZAA_MIN=11800; // סכום מינימום להקצאה
+var HEKTZAA_MIN=5900; // סכום מינימום להקצאה
 var DEFAULT_CATS=["מזון כללי","לחם","חלב","שתיה","סיגריות","ניקיון","בשר ודגים","פירות וירקות","אחר"];
 var CATS=JSON.parse(localStorage.getItem("inv_cats_list5")||JSON.stringify(DEFAULT_CATS));
 function saveCats(){localStorage.setItem("inv_cats_list5",JSON.stringify(CATS));}
@@ -1460,7 +1460,7 @@ function setEditPaid(v){
 function autoCrop(canvas, ctx, w, h){
   try{
     var data=ctx.getImageData(0,0,w,h).data;
-    var THRESH=160; // פיקסלים בהירים מ-160 נחשבים "מסמך"
+    var THRESH=120; // פיקסלים בהירים מ-120 נחשבים "מסמך"
     var top=h,bottom=0,left=w,right=0;
     for(var y=0;y<h;y++){
       for(var x=0;x<w;x++){
