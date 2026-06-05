@@ -1612,7 +1612,12 @@ function doSubmit(){
   if(!t){toast("יש לבחור תאריך","warn");return;}
   if(!pages.length){toast("יש להוסיף לפחות דף אחד","warn");return;}
   var amt=parseFloat(document.getElementById("amtTotal").value)||0;
-  // בדיקת הקצאה — מעל ₪11,800
+  if(!amt||amt<=0){
+    document.getElementById("amtTotal").focus();
+    toast("⚠️ יש להזין סכום חשבונית","warn");
+    return;
+  }
+  // בדיקת הקצאה — מעל ₪5,900
   if(amt>=HEKTZAA_MIN){
     document.getElementById("hektzaaAmt").textContent="₪"+amt.toFixed(2);
     document.getElementById("hektzaaNum").value="";
@@ -2352,13 +2357,12 @@ function updatePayTotals(){
   var total=keys.reduce(function(s,k){return s+(parseFloat(paySelInvs[k].amtTotal)||0);},0);
   document.getElementById("paySelCount").textContent=keys.length+" חשבוניות";
   document.getElementById("paySelTotal").textContent="₪"+fmtAmt(total);
-  // הצג כרטיס תשלום רק אם נבחרו חשבוניות
   document.getElementById("payMethodCard").style.display=keys.length>0?"block":"none";
-  // מלא סכום אוטומטי
+  // תמיד עדכן את כל שדות הסכום לסכום הנכון
   if(keys.length>0){
     var t=total.toFixed(2);
     ["bCashAmt","bCheckAmt","bBankAmt","bCreditAmt"].forEach(function(id){
-      var el=document.getElementById(id);if(el&&!el.value)el.value=t;
+      var el=document.getElementById(id);if(el)el.value=t;
     });
   }
 }
