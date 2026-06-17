@@ -515,7 +515,18 @@ ol.steps li strong{color:var(--text);}
     <div class="fbar">
       <div class="fcol" style="margin-bottom:8px;">
         <div class="flabel">ספק</div>
-        <div class="sw"><select id="hSup" onchange="loadHist()"><option value="all">כל הספקים</option></select><span class="sa">▾</span></div>
+        <div class="sup-search-wrap" id="hSupSearchWrap">
+          <div class="sup-search-btn" id="hSupSearchBtn" onclick="toggleHSupSearch()">
+            <span id="hSupLabel">כל הספקים</span>
+            <span style="color:var(--text3);">🔍</span>
+          </div>
+          <div class="sup-search-drop" id="hSupSearchDrop">
+            <input type="text" id="hSupSearchInp" placeholder="חפש ספק..." oninput="filterHSupDrop(this.value)"
+              style="border:none;border-bottom:1px solid var(--border);border-radius:0;background:#fff;padding:11px 14px;" />
+            <div id="hSupDropList" class="sup-drop-list"></div>
+          </div>
+        </div>
+        <input type="hidden" id="hSup" value="all" />
       </div>
       <div class="frow">
         <div class="fcol"><div class="flabel">מתאריך</div><input type="date" id="hFrom" onchange="loadHist()" /></div>
@@ -787,6 +798,7 @@ ol.steps li strong{color:var(--text);}
         <input type="email" id="emailInp" placeholder="example@gmail.com" dir="ltr" />
         <button class="bgreen" onclick="sendEmail()">📧 שלח דוח טקסט</button>
         <button class="bpurple" onclick="sendPDFReport()" style="margin-top:8px;">📎 שלח PDF מצורף (לרו"ח)</button>
+        <button class="bout" onclick="sendZIPReport()" style="margin-top:8px;border-color:var(--teal);color:var(--teal);">🗜 שלח ZIP (קובץ אחד)</button>
         <div class="sres" id="eRes"></div>
       </div>
       <div class="card" style="border-right:4px solid var(--purple);">
@@ -1253,7 +1265,7 @@ function buildCatsList(){
 }
 
 function rndSups(){
-  ["hSup","renOld","delSupSel"].forEach(function(id){
+  ["renOld","delSupSel"].forEach(function(id){
     var el=document.getElementById(id);if(!el)return;
     var cur=el.value,f=el.options[0].outerHTML;
     el.innerHTML=f;
@@ -1723,6 +1735,43 @@ function reset(){
 }
 
 /* ---- History ---- */
+/* ---- History supplier search ---- */
+function toggleHSupSearch(){
+  var drop=document.getElementById("hSupSearchDrop");
+  var btn=document.getElementById("hSupSearchBtn");
+  var isOpen=drop.classList.contains("open");
+  document.querySelectorAll(".sup-search-drop.open").forEach(function(d){d.classList.remove("open");});
+  document.querySelectorAll(".sup-search-btn.active").forEach(function(b){b.classList.remove("active");});
+  if(!isOpen){
+    drop.classList.add("open");btn.classList.add("active");
+    buildHSupList("");
+    setTimeout(function(){document.getElementById("hSupSearchInp").focus();},100);
+  }
+}
+function buildHSupList(q){
+  var list=document.getElementById("hSupDropList");list.innerHTML="";
+  var allDiv=document.createElement("div");allDiv.className="sup-drop-item";
+  allDiv.textContent="כל הספקים";
+  allDiv.onclick=function(){selectHSup("all","כל הספקים");};
+  list.appendChild(allDiv);
+  var filtered=q?sups.filter(function(s){return s.indexOf(q)!==-1;}):sups;
+  filtered.forEach(function(s){
+    var div=document.createElement("div");div.className="sup-drop-item";
+    div.textContent=s;
+    div.onclick=function(){selectHSup(s,s);};
+    list.appendChild(div);
+  });
+}
+function filterHSupDrop(q){buildHSupList(q);}
+function selectHSup(val,lbl){
+  document.getElementById("hSup").value=val;
+  document.getElementById("hSupLabel").textContent=lbl;
+  document.getElementById("hSupSearchDrop").classList.remove("open");
+  document.getElementById("hSupSearchBtn").classList.remove("active");
+  document.getElementById("hSupSearchInp").value="";
+  loadHist();
+}
+
 function loadHist(){
   var s=document.getElementById("hSup").value,f=document.getElementById("hFrom").value,t=document.getElementById("hTo").value;
   var pf=document.getElementById("hPaid").value,cat=document.getElementById("hCat").value;
@@ -1747,8 +1796,7 @@ function loadHist(){
 
     var list=document.getElementById("invList");list.innerHTML="";
     d.invoices.forEach(function(inv){
-      // תיקון 11: paid נכון — אם יש תשלום זה שולם
-      var isPaid=inv.paid==="true"||inv.paid===true||(inv.payment&&inv.payment!=="");
+      var isPaid=inv.paid===true||inv.paid==="true"||(inv.payment&&inv.payment!==""&&inv.payment!=="טרם שולם"&&inv.payment!=="unpaid");
       var div=document.createElement("div");div.className="icard";
       var top='<div class="itop"><span class="isup">'+esc(inv.supplier)+'</span><span class="idate">'+fmtDate(inv.date)+'</span></div>';
       var mid='<div class="idigs">ספרות: <strong>'+esc(inv.digits)+'</strong>';
@@ -1757,7 +1805,7 @@ function loadHist(){
       mid+='</div>';
       var bot='<div style="margin-top:6px;display:flex;align-items:center;flex-wrap:wrap;gap:5px;">';
       if(inv.amtTotal) bot+='<span class="iamt">₪'+fmtAmt(inv.amtTotal)+'</span>';
-      if(inv.payment)  bot+='<span class="ipay">'+esc(inv.payment)+'</span>';
+      if(inv.payment&&inv.payment!=="טרם שולם"&&inv.payment!=="unpaid") bot+='<span class="ipay">'+esc(inv.payment)+'</span>';
       if(inv.hektzaaNum) bot+='<span class="ibadge" style="background:#fef3c7;color:#d97706;">🏛️ '+esc(inv.hektzaaNum)+'</span>';
       if(inv.note) bot+='<div style="margin-top:6px;font-size:12px;color:var(--text2);background:var(--s2);border-radius:8px;padding:5px 10px;">💬 '+esc(inv.note)+'</div>';
       if(inv.category) bot+='<span class="icat">'+esc(inv.category)+'</span>';
@@ -2172,6 +2220,45 @@ function printReport(){
     else{toast("אפשר פופ-אפ בדפדפן","warn");}
   },function(){toast("שגיאת חיבור","err");});
 }
+function sendZIPReport(){
+  var em=document.getElementById("emailInp").value.trim();
+  if(!em){toast("יש להזין מייל","warn");return;}
+  var sendSups=getSendSups();
+  var supParam=sendSups.indexOf("all")!==-1?"all":sendSups.join(",");
+  var f=document.getElementById("sFrom").value;
+  var t2=document.getElementById("sTo").value;
+  var res=document.getElementById("eRes");
+  res.className="sres show";res.textContent="⏳ מייצר ZIP... עד 3 דקות, אל תסגור";
+  var btn=document.querySelector("#page-send .bout");
+  if(btn){btn.textContent="⏳ מייצר ZIP...";btn.disabled=true;}
+  var xhr=new XMLHttpRequest();
+  xhr.open("POST",SCRIPT_URL,true);
+  xhr.setRequestHeader("Content-Type","text/plain;charset=utf-8");
+  xhr.timeout=180000;
+  xhr.onload=function(){
+    if(btn){btn.textContent="🗜 שלח ZIP (קובץ אחד)";btn.disabled=false;}
+    var t=(xhr.responseText||"").trim();
+    if(t.charAt(0)==="{"){
+      try{
+        var d=JSON.parse(t);
+        if(d.success){res.className="sres show";res.textContent="✅ "+d.message;toast("✅ ZIP נשלח!","ok");}
+        else{res.className="sres show err";res.textContent="❌ "+(d.error||"שגיאה");}
+        return;
+      }catch(e){}
+    }
+    res.className="sres show err";res.textContent="❌ שגיאת חיבור";
+  };
+  xhr.onerror=function(){
+    if(btn){btn.textContent="🗜 שלח ZIP (קובץ אחד)";btn.disabled=false;}
+    res.className="sres show err";res.textContent="❌ שגיאת חיבור";
+  };
+  xhr.ontimeout=function(){
+    if(btn){btn.textContent="🗜 שלח ZIP (קובץ אחד)";btn.disabled=false;}
+    res.className="sres show err";res.textContent="⏱ פג זמן — נסה לסנן לתקופה קצרה יותר";
+  };
+  xhr.send(JSON.stringify({action:"sendZIP",email:em,supplier:supParam,dateFrom:f,dateTo:t2}));
+}
+
 function sendPDFReport(){
   var em=document.getElementById("emailInp").value.trim();
   if(!em){toast("יש להזין מייל","warn");return;}
