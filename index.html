@@ -1623,8 +1623,8 @@ function doSubmit(){
   if(d.length!==4){toast("יש להזין 4 ספרות","warn");return;}
   if(!t){toast("יש לבחור תאריך","warn");return;}
   if(!pages.length){toast("יש להוסיף לפחות דף אחד","warn");return;}
-  var amt=parseFloat(document.getElementById("amtTotal").value)||0;
-  if(!amt||amt<=0){
+  var amt=parseFloat(document.getElementById("amtTotal").value);
+  if(isNaN(amt)||amt===0){
     document.getElementById("amtTotal").focus();
     toast("⚠️ יש להזין סכום חשבונית","warn");
     return;
