@@ -387,7 +387,7 @@ ol.steps li strong{color:var(--text);}
       <div class="card teal">
         <div class="clabel">פרטי חשבונית</div>
         <div id="invNumBadge" class="inv-num" style="display:none;">🔢 מספר חשבונית: <strong id="invNumVal">—</strong></div>
-        <input type="text" class="digs" id="digsInp" placeholder="_ _ _ _" maxlength="4" inputmode="numeric" oninput="this.value=this.value.replace(/\D/g,'');clrDup();updSum()" />
+        <input type="text" class="digs" id="digsInp" placeholder="_ _ _ _ _ _" maxlength="6" inputmode="numeric" oninput="this.value=this.value.replace(/\D/g,'');clrDup();updSum()" onblur="padDigits(this)" />
         <div class="dup" id="dupW">
           ⚠️ כפילות! חשבונית עם ספרות אלו כבר קיימת לספק זה!
         </div>
@@ -480,6 +480,10 @@ ol.steps li strong{color:var(--text);}
         <div class="apbtns">
           <button class="bpage" onclick="document.getElementById('fileC').click()">📷 צלם דף</button>
           <button class="bpage" onclick="document.getElementById('fileG').click()">🖼 מהגלריה</button>
+        </div>
+        <div style="font-size:11px;color:var(--text3);text-align:center;margin-top:6px;line-height:1.5;">
+          📱 אנדרואיד: צלם במצלמה → חזור → בחר מהגלריה<br>
+          🍎 אייפון: אפשר לצלם ישירות
         </div>
         <input type="file" id="fileC" accept="image/*" capture="environment" onchange="addPage(this)" />
         <input type="file" id="fileG" accept="image/*" multiple onchange="addPages(this)" />
@@ -899,7 +903,7 @@ ol.steps li strong{color:var(--text);}
       </div>
       <div class="fcol">
         <div class="flabel">4 ספרות</div>
-        <input type="text" id="editDigits" maxlength="4" inputmode="numeric" placeholder="_ _ _ _" class="digs" style="font-size:18px;" />
+        <input type="text" id="editDigits" maxlength="6" inputmode="numeric" placeholder="_ _ _ _ _ _" class="digs" style="font-size:18px;" onblur="padDigits(this)" />
       </div>
     </div>
     <div class="frow" style="margin-bottom:8px;">
@@ -977,7 +981,7 @@ var sups = JSON.parse(localStorage.getItem(SK)||"[]");
 var supCats = JSON.parse(localStorage.getItem(CK)||"{}");
 var invCounter = parseInt(localStorage.getItem(CNK)||"0")||0;
 function getNextInvNum(){invCounter++;localStorage.setItem(CNK,String(invCounter));return invCounter;}
-var MAX_PX=1200, QUALITY=0.82;
+var MAX_PX=1600, QUALITY=0.85;
 var pages=[], payMode="", paidStatus=false, editPayMode="", editPaidStatus=false, ttm;
 var HEKTZAA_MIN=5900; // סכום מינימום להקצאה
 var DEFAULT_CATS=["מזון כללי","לחם","חלב","שתיה","סיגריות","ניקיון","בשר ודגים","פירות וירקות","אחר"];
@@ -1611,6 +1615,13 @@ function payLbl(){
   }
   return"";
 }
+function padDigits(el){
+  if(!el.value)return;
+  if(el.value.length===4) el.value="00"+el.value;
+  else if(el.value.length===5) el.value="0"+el.value;
+  updSum();
+}
+
 function clrDup(){document.getElementById("dupW").classList.remove("show");}
 
 /* ---- Submit ---- */
@@ -1620,7 +1631,7 @@ function doSubmit(){
   if(!s||s==="— בחר ספק —"){toast("יש לבחור ספק","warn");return;}
   var d=document.getElementById("digsInp").value;
   var t=document.getElementById("dateInp").value;
-  if(d.length!==4){toast("יש להזין 4 ספרות","warn");return;}
+  if(d.length<4||d.length>6){toast("יש להזין 4-6 ספרות","warn");return;}
   if(!t){toast("יש לבחור תאריך","warn");return;}
   if(!pages.length){toast("יש להוסיף לפחות דף אחד","warn");return;}
   var amt=parseFloat(document.getElementById("amtTotal").value);
