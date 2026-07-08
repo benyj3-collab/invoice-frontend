@@ -920,6 +920,10 @@ ol.steps li strong{color:var(--text);}
       <div class="flabel">💬 הערה</div>
       <input type="text" id="editNote" placeholder="הערה לחשבונית..." maxlength="200" />
     </div>
+    <div class="fcol" style="margin-bottom:8px;">
+      <div class="flabel">🏛️ מספר הקצאה (למע"מ)</div>
+      <input type="text" id="editHektzaa" placeholder="הזן מספר הקצאה אם התקבל" inputmode="numeric" />
+    </div>
     <input type="hidden" id="editAmtBefore" />
 
     <!-- תשלום -->
@@ -1308,28 +1312,56 @@ function toggleMsupDrop(dropId,storeKey,lblId){
   });
   var drop=document.getElementById(dropId);
   if(!drop)return;
-  if(!drop.innerHTML) buildMsupDrop(dropId,storeKey,lblId);
+  var willOpen=!drop.classList.contains("open");
+  if(willOpen) buildMsupDrop(dropId,storeKey,lblId,""); // בכל פתיחה: רשימה טרייה + חיפוש מאופס
   drop.classList.toggle("open");
+  if(willOpen){
+    var inp=document.getElementById(dropId+"_q");
+    if(inp) setTimeout(function(){inp.focus();},50);
+  }
 }
 
-function buildMsupDrop(dropId,storeKey,lblId){
+function buildMsupDrop(dropId,storeKey,lblId,query){
   var drop=document.getElementById(dropId);if(!drop)return;
   if(!window[storeKey])window[storeKey]=[];
   var arr=window[storeKey];
+  var q=(query||"").trim();
   drop.innerHTML="";
-  // "כולם"
-  var allItem=document.createElement("div");
-  allItem.className="msup-item"+(arr.indexOf("all")!==-1||arr.length===0?" sel":"");
-  var allCk=document.createElement("div");allCk.className="msup-ck";allCk.textContent=(arr.indexOf("all")!==-1||arr.length===0?"✓":"");
-  var allLbl=document.createElement("span");allLbl.textContent="כל הספקים";
-  allItem.appendChild(allCk);allItem.appendChild(allLbl);
-  allItem.onclick=function(){
-    window[storeKey]=[];
-    buildMsupDrop(dropId,storeKey,lblId);
-    updateMsupLbl(storeKey,lblId);
-  };
-  drop.appendChild(allItem);
-  sups.forEach(function(s){
+  // תיבת חיפוש - כתיבת שם ספק לסינון מהיר
+  var searchWrap=document.createElement("div");
+  searchWrap.style.cssText="padding:6px;position:sticky;top:0;background:#fff;z-index:2;";
+  var searchInp=document.createElement("input");
+  searchInp.type="text";
+  searchInp.id=dropId+"_q";
+  searchInp.placeholder="🔍 הקלד שם ספק לסינון...";
+  searchInp.value=q;
+  searchInp.style.cssText="width:100%;background:var(--s2);border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-family:'Heebo',sans-serif;font-size:13px;direction:rtl;outline:none;";
+  searchInp.onclick=function(e){e.stopPropagation();};
+  searchInp.oninput=function(e){buildMsupDrop(dropId,storeKey,lblId,e.target.value);};
+  searchWrap.appendChild(searchInp);
+  drop.appendChild(searchWrap);
+  // "כולם" - רק כשאין חיפוש פעיל
+  if(!q){
+    var allItem=document.createElement("div");
+    allItem.className="msup-item"+(arr.indexOf("all")!==-1||arr.length===0?" sel":"");
+    var allCk=document.createElement("div");allCk.className="msup-ck";allCk.textContent=(arr.indexOf("all")!==-1||arr.length===0?"✓":"");
+    var allLbl=document.createElement("span");allLbl.textContent="כל הספקים";
+    allItem.appendChild(allCk);allItem.appendChild(allLbl);
+    allItem.onclick=function(){
+      window[storeKey]=[];
+      buildMsupDrop(dropId,storeKey,lblId,"");
+      updateMsupLbl(storeKey,lblId);
+    };
+    drop.appendChild(allItem);
+  }
+  var filtered=q?sups.filter(function(s){return s.indexOf(q)!==-1;}):sups;
+  if(q&&!filtered.length){
+    var none=document.createElement("div");
+    none.style.cssText="padding:12px;color:var(--text3);text-align:center;font-size:13px;";
+    none.textContent="לא נמצא ספק";
+    drop.appendChild(none);
+  }
+  filtered.forEach(function(s){
     var item=document.createElement("div");
     item.className="msup-item"+(arr.indexOf(s)!==-1?" sel":"");
     var ck=document.createElement("div");ck.className="msup-ck";ck.textContent=(arr.indexOf(s)!==-1?"✓":"");
@@ -1342,8 +1374,10 @@ function buildMsupDrop(dropId,storeKey,lblId){
       var idx=a.indexOf(s);
       if(idx!==-1)a.splice(idx,1);else a.push(s);
       window[storeKey]=a;
-      buildMsupDrop(dropId,storeKey,lblId);
+      buildMsupDrop(dropId,storeKey,lblId,q);
       updateMsupLbl(storeKey,lblId);
+      var inp2=document.getElementById(dropId+"_q");
+      if(inp2){inp2.focus();var v=inp2.value;inp2.value="";inp2.value=v;}
     };
     drop.appendChild(item);
   });
@@ -1823,12 +1857,12 @@ function loadHist(){
       bot+='<span class="ipaid '+(isPaid?"yes":"no")+'">'+(isPaid?"✅ שולם":"❌ לא שולם")+'</span>';
       bot+='</div>';
       var btns='<div class="ibtns">';
-      var editData={rowId:inv.rowId,supplier:inv.supplier,date:inv.date,digits:inv.digits,amtTotal:inv.amtTotal||"",category:inv.category||"",note:inv.note||"",payment:inv.payment||"",payAmount:inv.payAmount||"",payAmount2:inv.payAmount2||"",checkNum:inv.checkNum||"",checkNum2:inv.checkNum2||"",checkDate:inv.checkDate||"",checkDate2:inv.checkDate2||""};
+      var editData={rowId:inv.rowId,supplier:inv.supplier,date:inv.date,digits:inv.digits,amtTotal:inv.amtTotal||"",category:inv.category||"",note:inv.note||"",payment:inv.payment||"",payAmount:inv.payAmount||"",payAmount2:inv.payAmount2||"",checkNum:inv.checkNum||"",checkNum2:inv.checkNum2||"",checkDate:inv.checkDate||"",checkDate2:inv.checkDate2||"",hektzaaNum:inv.hektzaaNum||""};
       var editId="ed-"+Math.random().toString(36).substr(2,8);
       window[editId]=editData;
       btns+='<button class="ibtn edit" onclick="openEditFull(window[\''+editId+'\'])">✏️ עריכה</button>';
       if(inv.fileUrl) btns+='<button class="ibtn open" onclick="window.open(\''+inv.fileUrl+'\',\'_blank\')">📂 פתח</button>';
-      if(!isPaid) btns+='<button class="ibtn pay" onclick="markPaid(\''+esc(inv.rowId)+'\')">💳 שלמתי</button>';
+      if(!isPaid) btns+='<button class="ibtn pay" onclick="markPaid(window[\''+editId+'\'])">💳 שלמתי</button>';
       btns+='</div>';
       div.innerHTML=top+mid+bot+btns;
       list.appendChild(div);
@@ -1836,9 +1870,10 @@ function loadHist(){
   },function(){document.getElementById("invList").innerHTML='<div class="iempty">שגיאת חיבור</div>';});
 }
 
-function markPaid(rowId){
-  // פתח מודל עריכה עם מיקוד על תשלום
-  openEditFull({rowId:rowId,supplier:"",date:"",digits:"",amtTotal:"",category:"",note:"",payment:"",payAmount:"",payAmount2:"",checkNum:"",checkNum2:"",checkDate:"",checkDate2:""});
+function markPaid(inv){
+  // פתח מודל עריכה מלא (עם כל הנתונים הקיימים, כולל מספר הקצאה) ומיקוד על תשלום
+  if(typeof inv==="string") inv={rowId:inv,supplier:"",date:"",digits:"",amtTotal:"",category:"",note:"",payment:"",payAmount:"",payAmount2:"",checkNum:"",checkNum2:"",checkDate:"",checkDate2:"",hektzaaNum:""};
+  openEditFull(inv);
   setTimeout(function(){
     var el=document.getElementById("epo-cash");
     if(el)el.scrollIntoView({behavior:"smooth",block:"center"});
@@ -1852,6 +1887,7 @@ function openEditFull(inv){
   document.getElementById("editAmtTotal").value=inv.amtTotal||"";
   document.getElementById("editAmtBefore").value="";
   document.getElementById("editNote").value=inv.note||"";
+  document.getElementById("editHektzaa").value=inv.hektzaaNum||"";
   // ספק
   var supSel=document.getElementById("editSupSel");
   supSel.innerHTML='<option value="">בחר ספק</option>';
@@ -1906,6 +1942,7 @@ function saveEdit(){
     amtTotal:document.getElementById("editAmtTotal").value||"",
     category:document.getElementById("editCat").value||"",
     note:document.getElementById("editNote").value||"",
+    hektzaaNum:document.getElementById("editHektzaa").value||"",
     paid:isPaid,
     payment:editPayMode,
     payAmount:editPayMode==="cash"?document.getElementById("ecAmt").value:
@@ -2396,13 +2433,18 @@ function renderPayInvList(invs){
     var div=document.createElement("div");
     div.className="pay-inv-item";div.id="pi-"+inv.rowId;
     var amt=parseFloat(inv.amtTotal)||0;
+    var payEditId="ped-"+Math.random().toString(36).substr(2,8);
+    window[payEditId]={rowId:inv.rowId,supplier:inv.supplier,date:inv.date,digits:inv.digits,amtTotal:inv.amtTotal||"",category:inv.category||"",note:inv.note||"",payment:inv.payment||"",payAmount:inv.payAmount||"",payAmount2:inv.payAmount2||"",checkNum:inv.checkNum||"",checkNum2:inv.checkNum2||"",checkDate:inv.checkDate||"",checkDate2:inv.checkDate2||"",hektzaaNum:inv.hektzaaNum||""};
     div.innerHTML=
       '<div class="pi-check" id="pck-'+esc(inv.rowId)+'">☐</div>'+
       '<div class="pi-info">'+
-        '<div class="pi-sup">'+esc(inv.supplier)+(inv.invNum?' <span class="ibadge num">#'+inv.invNum+'</span>':'')+'</div>'+
+        '<div class="pi-sup">'+esc(inv.supplier)+(inv.invNum?' <span class="ibadge num">#'+inv.invNum+'</span>':'')+
+          (inv.hektzaaNum?' <span class="ibadge" style="background:#fef3c7;color:#d97706;">🏛️ '+esc(inv.hektzaaNum)+'</span>':' <span class="ibadge" style="background:var(--s2);color:var(--text3);">🏛️ הוסף הקצאה</span>')+
+        '</div>'+
         '<div class="pi-details">'+fmtDate(inv.date)+' | <span style="font-family:monospace;">'+esc(inv.digits)+'</span>'+
           (amt?'<span class="pi-amt"> | ₪'+fmtAmt(amt)+'</span>':'')+'</div>'+
-      '</div>';
+      '</div>'+
+      '<button type="button" class="ibtn edit" style="flex-shrink:0;padding:6px 10px;font-size:11px;" onclick="event.stopPropagation();markPaid(window[\''+payEditId+'\'])">✏️</button>';
     div.onclick=function(){togglePayInv(inv);};
     list.appendChild(div);
   });
