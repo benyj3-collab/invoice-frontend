@@ -809,6 +809,7 @@ ol.steps li strong{color:var(--text);}
         <div class="clabel">🖨 הדפסת דוח</div>
         <p style="font-size:12px;color:var(--text2);margin-bottom:10px;">מייצר דף סיכום להדפסה עם כל החשבוניות, אופן תשלום ומספר סידורי.</p>
         <button class="bpurple" onclick="printReport()" style="margin-top:0;">🖨 הפק דוח להדפסה</button>
+        <button class="bgreen" onclick="exportExcel()" style="margin-top:8px;">📊 שלח Excel לרו"ח</button>
       </div>
         <div class="flabel" style="margin-bottom:5px;">מספר טלפון (עם קידומת 972)</div>
         <input type="text" id="waInp" placeholder="972501234567" dir="ltr" inputmode="numeric" />
@@ -2261,7 +2262,7 @@ function printReport(){
     html+='<div class="sbox"><div class="val" style="color:#16a34a;">'+totalPaid+'</div><div class="lbl">שולמו</div></div>';
     html+='<div class="sbox"><div class="val" style="color:#dc2626;">'+(invs.length-totalPaid)+'</div><div class="lbl">לא שולמו</div></div>';
     html+='</div>';
-    html+='<table><tr><th>#</th><th>מס׳</th><th>ספק</th><th>תאריך</th><th>ספרות</th><th>סכום ₪</th><th>תשלום</th><th>סטטוס</th></tr>';
+    html+='<table><tr><th>#</th><th>מס׳</th><th>ספק</th><th>תאריך</th><th>ספרות</th><th>סכום ₪</th><th>הקצאה</th><th>תשלום</th><th>סטטוס</th></tr>';
     invs.forEach(function(inv,i){
       var isPaid=inv.paid===true||inv.paid==="true"||(inv.payment&&inv.payment!=="טרם שולם");
       var payStr=inv.payment||"טרם שולם";
@@ -2272,11 +2273,12 @@ function printReport(){
       html+='<td>'+fmtDate(inv.date)+'</td>';
       html+='<td style="font-family:monospace;letter-spacing:2px;">'+esc(inv.digits)+'</td>';
       html+='<td style="font-weight:700;">₪'+fmtAmt(inv.amtTotal||0)+'</td>';
+      html+='<td style="color:#d97706;font-weight:700;">'+(inv.hektzaaNum?'🏛️ '+esc(inv.hektzaaNum):'—')+'</td>';
       html+='<td>'+esc(payStr)+'</td>';
       html+='<td class="'+(isPaid?"paid":"unpaid")+'">'+(isPaid?"✅ שולם":"❌ לא שולם")+'</td>';
       html+='</tr>';
     });
-    html+='<tr class="total-row"><td colspan="5">סה"כ</td><td>₪'+fmtAmt(totalAmt)+'</td><td></td><td>'+totalPaid+'/'+invs.length+'</td></tr>';
+    html+='<tr class="total-row"><td colspan="6">סה"כ</td><td>₪'+fmtAmt(totalAmt)+'</td><td></td><td>'+totalPaid+'/'+invs.length+'</td></tr>';
     html+='</table></body></html>';
     var w=window.open("","_blank");
     if(w){w.document.write(html);w.document.close();}
@@ -2640,6 +2642,59 @@ function deleteInvoice(rowId){
   apiPost({action:"deleteInvoice",rowId:rowId},function(r){
     if(r.success){toast("✅ חשבונית נמחקה","ok");loadHist();}
     else toast(r.error||"שגיאה","err");
+  },function(){toast("שגיאת חיבור","err");});
+}
+
+function exportExcel(){
+  var sendSups=getSendSups();
+  var f=document.getElementById("sFrom").value;
+  var t=document.getElementById("sTo").value;
+  var supParam=sendSups.indexOf("all")!==-1?"all":sendSups.join(",");
+  var qs="action=getInvoices&supplier="+encodeURIComponent(supParam);
+  if(f)qs+="&dateFrom="+encodeURIComponent(f);
+  if(t)qs+="&dateTo="+encodeURIComponent(t);
+  toast("⏳ מכין Excel...","");
+  apiGet(qs,function(d){
+    if(!d.success||!d.invoices||!d.invoices.length){toast("אין חשבוניות","warn");return;}
+    var invs=d.invoices;
+    // Build CSV with BOM for Hebrew Excel support
+    var BOM="﻿";
+    var rows=[["#","מספר","ספק","תאריך","ספרות","סכום ₪","הקצאה","תשלום","סטטוס","קטגוריה","הערה"]];
+    invs.forEach(function(inv,i){
+      var isPaid=inv.paid===true||inv.paid==="true"||(inv.payment&&inv.payment!=="טרם שולם");
+      rows.push([
+        i+1,
+        inv.invNum?"#"+inv.invNum:"",
+        inv.supplier||"",
+        inv.date||"",
+        inv.digits||"",
+        inv.amtTotal||"",
+        inv.hektzaaNum||"",
+        inv.payment||"טרם שולם",
+        isPaid?"שולם":"לא שולם",
+        inv.category||"",
+        inv.note||""
+      ]);
+    });
+    var csv=BOM+rows.map(function(r){
+      return r.map(function(c){
+        var s=String(c||"");
+        if(s.indexOf(",")!==-1||s.indexOf('"')!==-1||s.indexOf("\n")!==-1)
+          s='"'+s.replace(/"/g,'""')+'"';
+        return s;
+      }).join(",");
+    }).join("\n");
+    var blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement("a");
+    a.href=url;
+    var date=new Date();
+    a.download="חשבוניות_מירב_"+date.getFullYear()+"-"+String(date.getMonth()+1).padStart(2,"0")+"-"+String(date.getDate()).padStart(2,"0")+".csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast("✅ Excel הורד!","ok");
   },function(){toast("שגיאת חיבור","err");});
 }
 
