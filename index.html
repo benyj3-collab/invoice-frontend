@@ -1174,7 +1174,7 @@ function loadSups(){
   // timeout קצר לבדיקה ראשונית
   var xhr=new XMLHttpRequest();
   xhr.open("GET",SCRIPT_URL+"?action=getSuppliers",true);
-  xhr.timeout=8000;
+  xhr.timeout=20000;
   xhr.onload=function(){
     var t=(xhr.responseText||"").trim();
     if(t.charAt(0)==="{"){
