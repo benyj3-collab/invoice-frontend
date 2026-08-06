@@ -1193,7 +1193,16 @@ function loadSups(){
     }
     rndSups();setSt("err","עובד מקומית");
   };
-  xhr.onerror=xhr.ontimeout=function(){rndSups();setSt("err","עובד מקומית");};
+  xhr.onerror=xhr.ontimeout=function(){
+    rndSups();setSt("err","עובד מקומית");
+    // נסה שוב אחרי 5 שניות (Google Apps Script cold start)
+    setTimeout(function(){
+      if(document.getElementById("sDot").className.indexOf("ok")===-1){
+        setSt("","מנסה שוב...");
+        loadSups();
+      }
+    },5000);
+  };
   xhr.send();
 }
 
