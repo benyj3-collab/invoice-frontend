@@ -620,6 +620,7 @@ ol.steps li strong{color:var(--text);}
         <div class="pf open" id="bpf-cash">
           <div class="fcol"><div class="flabel">סכום מזומן (₪)</div>
           <input type="number" id="bCashAmt" placeholder="0.00" inputmode="decimal" /></div>
+          <div class="fcol mt8"><div class="flabel">📅 תאריך תשלום</div><input type="date" id="bCashDate" /></div>
         </div>
 
         <!-- צ׳ק -->
@@ -637,6 +638,7 @@ ol.steps li strong{color:var(--text);}
             <div class="fcol"><div class="flabel">מספר אסמכתה</div><input type="text" id="bBankRef" placeholder="123456789" inputmode="numeric" /></div>
             <div class="fcol"><div class="flabel">סכום (₪)</div><input type="number" id="bBankAmt" placeholder="0.00" inputmode="decimal" /></div>
           </div>
+          <div class="fcol mt8"><div class="flabel">📅 תאריך תשלום</div><input type="date" id="bBankDate" /></div>
         </div>
 
         <!-- אשראי -->
@@ -653,6 +655,7 @@ ol.steps li strong{color:var(--text);}
               </div>
             </div>
           </div>
+          <div class="fcol mt8"><div class="flabel">📅 תאריך תשלום</div><input type="date" id="bCreditDate" /></div>
         </div>
 
         <button class="bsub" onclick="confirmBulkPayment()" style="margin-top:4px;">
@@ -2549,22 +2552,27 @@ function confirmBulkPayment(){
   var payStr="";
   var payAmt="";
   var checkNum="";var checkDate="";var bankRef="";var creditLast4="";
+  var payDate="";
   if(bulkPayMode==="cash"){
     payAmt=document.getElementById("bCashAmt").value;
-    payStr="💵 מזומן ₪"+payAmt;
+    payDate=document.getElementById("bCashDate").value;
+    payStr="💵 מזומן ₪"+payAmt+(payDate?" ("+payDate+")":"");
   } else if(bulkPayMode==="check"){
     checkNum=document.getElementById("bCheckNum").value;
     payAmt=document.getElementById("bCheckAmt").value;
-    checkDate=document.getElementById("bCheckDate").value;
+    checkDate=document.getElementById("bCheckDate").value||document.getElementById("bCheckDate").value;
+    payDate=checkDate;
     payStr="📄 צ'ק #"+checkNum+" ₪"+payAmt+(checkDate?" ("+checkDate+")":"");
   } else if(bulkPayMode==="bank"){
     bankRef=document.getElementById("bBankRef").value;
     payAmt=document.getElementById("bBankAmt").value;
-    payStr="🏦 העברה #"+bankRef+" ₪"+payAmt;
+    payDate=document.getElementById("bBankDate").value;
+    payStr="🏦 העברה #"+bankRef+" ₪"+payAmt+(payDate?" ("+payDate+")":"");
   } else if(bulkPayMode==="credit"){
     creditLast4=document.getElementById("bCreditLast4").value;
     payAmt=document.getElementById("bCreditAmt").value;
-    payStr="💳 אשראי *"+creditLast4+" ₪"+payAmt;
+    payDate=document.getElementById("bCreditDate").value;
+    payStr="💳 אשראי *"+creditLast4+" ₪"+payAmt+(payDate?" ("+payDate+")":"");
   }
   var btn=document.querySelector("#payMethodCard .bsub");
   btn.classList.add("loading");btn.disabled=true;
@@ -2578,7 +2586,8 @@ function confirmBulkPayment(){
       payment:bulkPayMode,payStr:payStr,
       payAmount:payAmt,checkNum:checkNum,
       checkDate:checkDate,bankRef:bankRef,
-      creditLast4:creditLast4
+      creditLast4:creditLast4,
+      payDate:payDate
     },function(r){
       done++;
       if(!r.success)errors++;
